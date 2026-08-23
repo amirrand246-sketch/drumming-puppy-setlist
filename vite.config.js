@@ -24,7 +24,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#f2f2f7',
-        theme_color: '#ef5f3c',
+        theme_color: '#101010',
         categories: ['music', 'productivity'],
         icons: [
           { src: 'icons/icon-64.png', sizes: '64x64', type: 'image/png' },

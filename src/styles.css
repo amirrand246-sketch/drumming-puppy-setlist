@@ -1,7 +1,14 @@
 :root {
-  --accent: #ef5f3c;
+  /* Monochrome, taken from the logo: its field is #101010 on white. */
+  --accent: #101010;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(239, 95, 60, 0.12);
+  --accent-soft: rgba(16, 16, 16, 0.08);
+
+  /* Difficulty reads as weight rather than hue: light, mid, solid. */
+  --tone-1: rgba(16, 16, 16, 0.07);
+  --tone-2: rgba(16, 16, 16, 0.15);
+  --tone-3: #101010;
+  --tone-3-ink: #ffffff;
 
   --bg: #f2f2f7;
   --card: #ffffff;
@@ -23,9 +30,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --accent: #ff7551;
-    --accent-ink: #1a0d08;
-    --accent-soft: rgba(255, 117, 81, 0.16);
+    --accent: #f4f4f6;
+    --accent-ink: #101010;
+    --accent-soft: rgba(255, 255, 255, 0.14);
+
+    --tone-1: rgba(255, 255, 255, 0.10);
+    --tone-2: rgba(255, 255, 255, 0.20);
+    --tone-3: #f2f2f6;
+    --tone-3-ink: #101010;
 
     --bg: #0b0b0d;
     --card: #17171a;
@@ -87,6 +99,8 @@ select {
 
 a {
   color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .app {
@@ -387,27 +401,18 @@ a {
 }
 
 .pill--easy {
-  background: rgba(52, 168, 108, 0.16);
-  color: #2e8c5b;
+  background: var(--tone-1);
+  color: var(--muted);
 }
 
 .pill--medium {
-  background: rgba(224, 158, 30, 0.18);
-  color: #b47c11;
+  background: var(--tone-2);
+  color: var(--text);
 }
 
 .pill--hard {
-  background: rgba(217, 58, 43, 0.16);
-  color: var(--danger);
-}
-
-@media (prefers-color-scheme: dark) {
-  .pill--easy {
-    color: #5cd39a;
-  }
-  .pill--medium {
-    color: #f0bb54;
-  }
+  background: var(--tone-3);
+  color: var(--tone-3-ink);
 }
 
 .chips {
@@ -1161,7 +1166,12 @@ body.gig-open {
 }
 
 .gig {
-  /* Always dark and high contrast: this gets read on a dim stage. */
+  /* Always dark and high contrast: this gets read on a dim stage. Because it
+     ignores the theme, it pins the accent white rather than inheriting a
+     black one that would vanish against this background. */
+  --accent: #ffffff;
+  --accent-ink: #101010;
+  --accent-soft: rgba(255, 255, 255, 0.14);
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -1324,7 +1334,7 @@ body.gig-open {
 .gig__step--main {
   flex: 1;
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-ink);
 }
 
 .gig__step:active {
