@@ -81,9 +81,40 @@ export async function findSong(name, artist) {
     (result) => result.trackViewUrl && isConfident(result, name, artist),
   )
   if (!match) return null
+  return trackFrom(match)
+}
+
+/** The fields the tempo lookup cross-checks against. */
+function trackFrom(result) {
   return {
-    url: match.trackViewUrl,
-    trackName: match.trackName || name,
-    artistName: match.artistName || artist,
+    url: result.trackViewUrl,
+    trackName: result.trackName || '',
+    artistName: result.artistName || '',
+    collectionName: result.collectionName || '',
+    trackTimeMillis: Number(result.trackTimeMillis) || 0,
   }
+}
+
+/** Apple Music song links carry the track id as ?i= — e.g. …/album/x/123?i=456 */
+export function trackIdFromUrl(url) {
+  const match = /[?&]i=(\d+)/.exec(url || '')
+  if (match) return match[1]
+  const tail = /\/(?:song|album)\/[^/]*\/(\d+)/.exec(url || '')
+  return tail ? tail[1] : ''
+}
+
+/** Fetch a track's metadata for a link the user pasted rather than searched. */
+export async function lookupTrack(id) {
+  if (!id) return null
+  const url = `https://itunes.apple.com/lookup?id=${encodeURIComponent(id)}&entity=song`
+  let data
+  try {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(`Lookup returned ${response.status}`)
+    data = await response.json()
+  } catch (err) {
+    data = await jsonp(url)
+  }
+  const result = (data?.results || []).find((item) => item.wrapperType === 'track' || item.trackName)
+  return result ? trackFrom(result) : null
 }

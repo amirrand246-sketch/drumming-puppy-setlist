@@ -16,9 +16,6 @@ npm run build    # writes dist/
 npm run preview  # serves the built app
 ```
 
-`npm run dev` and `npm run build` first copy the OCR engine out of `node_modules`
-into `public/ocr/` (see below); that folder is generated, not committed.
-
 ## Installing on a phone
 
 Open `https://<site>/` and use **Add to Home Screen** (iOS Safari) or
@@ -38,9 +35,10 @@ and works offline after the first load.
   move through the set, tap the counter to jump, A−/A+ resizes the notes, and the
   screen is kept awake. Tutorial links are deliberately not shown here — playing
   notes only. Finishing offers to stamp every song as played today.
-- **Import from notes** — point it at a screenshot of an existing notes page and
-  it reads the text on the device, splits it into songs, and shows a review list
-  before anything is saved. Pasting text works the same way.
+- **Tempo and metronome** — songs with an Apple Music link get their tempo looked
+  up once through GetSongBPM, cross-checked against the linked track's album and
+  duration so a live take or remix cannot supply the wrong number. A Web Audio
+  metronome plays that tempo on the profile and in gig mode, offline.
 
 - **Backup & restore** — export the whole library (songs, setlists, screenshots)
   to a JSON file you keep somewhere else, and restore it on a new phone or after
@@ -58,29 +56,19 @@ Data survives app close, reopen and phone restarts. Nothing is synced, so the
 export file under **Backup & restore** is the only copy that outlives the
 device — deleting the site's data or the app deletes everything else.
 
-## OCR
+## Tempo lookups
 
-`tesseract.js` runs in a web worker. The worker, the wasm core and the English
-model are served from this app's own `/ocr/` rather than a CDN, so after
-the first scan caches them (~7 MB, via the service worker and Tesseract's own
-IndexedDB cache) the importer works with no network at all.
+`VITE_GETSONGBPM_KEY` holds a free key from https://getsongbpm.com/api. Copy
+`.env.example` to `.env` locally, and set the same variable in Netlify under
+Site configuration → Environment variables. Without a key the app runs normally
+and the tempo row reads "No tempo service configured".
 
-`npm run ocr:assets` copies those files from `node_modules`; the build runs it
-automatically. Bumping `tesseract.js` or `tesseract.js-core` means re-running it
-so the self-hosted core matches the library version.
+Being a browser app, the key ships inside the bundle — it is a public,
+rate-limited key, not a secret. Move the call behind a Netlify function if that
+ever matters.
 
-## Icons
-
-Every icon is generated from `icons-src/logo.png` by `node scripts/make-icons.mjs`
-— PNGs at 64/180/192/512, a maskable 512 padded onto the logo's own `#101010`
-field, and a favicon. It needs a local Chromium and is run by hand after the
-logo changes, not during the build; the generated files are committed.
-
-## Deploying
-
-Netlify reads `netlify.toml`, so connecting this repo needs no settings typed in:
-build command `npm run build`, publish directory `dist`, Node 22. Every push to
-`main` redeploys, and installed apps pick the new version up on next launch.
+The metronome itself is Web Audio, so once a tempo is stored it works with no
+network at all.
 
 ## Layout
 
@@ -89,8 +77,10 @@ src/
   storage.js      IndexedDB with localStorage fallback
   store.jsx       React context: songs, setlists, images, CRUD
   model.js        record shapes, sorting, formatting
-  ocr.js          Tesseract worker setup, image downscaling
-  parseNotes.js   OCR/pasted text -> song candidates
+  appleMusic.js   iTunes search and lookup, match confidence
+  tempo.js        GetSongBPM lookup plus the version cross-check
+  metronome.js    Web Audio click scheduling
+  images.js       downscaling for attached screenshots
   router.js       hash routing
   components/     screens and shared UI
 ```

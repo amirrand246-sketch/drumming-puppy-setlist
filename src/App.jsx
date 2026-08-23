@@ -3,7 +3,6 @@ import { SongLibrary } from './components/SongLibrary.jsx'
 import { SongProfile } from './components/SongProfile.jsx'
 import { SetlistsScreen } from './components/SetlistsScreen.jsx'
 import { SetlistEditor } from './components/SetlistEditor.jsx'
-import { ImportScreen } from './components/ImportScreen.jsx'
 import { GigMode } from './components/GigMode.jsx'
 import { BackupScreen } from './components/BackupScreen.jsx'
 import { Icon } from './components/ui.jsx'
@@ -46,8 +45,6 @@ export default function App() {
 
   if (section === 'backup') {
     screen = <BackupScreen />
-  } else if (section === 'import') {
-    screen = <ImportScreen />
   } else if (section === 'sets') {
     activeTab = 'sets'
     screen = id ? <SetlistEditor key={id} setlistId={id} /> : <SetlistsScreen />

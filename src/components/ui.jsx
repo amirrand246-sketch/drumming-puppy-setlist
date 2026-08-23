@@ -18,6 +18,7 @@ const PATHS = {
   image: 'M4 5h16v14H4zM4 16l4.5-4.5 3.5 3.5 3-3L20 17M15.5 9h.01',
   text: 'M5 6h14M5 12h14M5 18h9',
   play: 'M7 4.5v15l13-7.5z',
+  pause: 'M9 5v14M15 5v14',
   download: 'M12 3v12M7 11l5 5 5-5M4 20h16',
   upload: 'M12 16V4M7 9l5-5 5 5M4 20h16',
   shield: 'M12 3l8 3v6c0 4.4-3.2 7.9-8 9-4.8-1.1-8-4.6-8-9V6l8-3z',

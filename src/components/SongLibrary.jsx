@@ -68,19 +68,9 @@ export function SongLibrary() {
         large
         title="Songs"
         right={
-          <>
-            <button
-              type="button"
-              className="iconbtn"
-              onClick={() => navigate('/import')}
-              aria-label="Import songs from a screenshot"
-            >
-              <Icon name="scan" />
-            </button>
-            <button type="button" className="iconbtn" onClick={addSong} aria-label="Add song">
-              <Icon name="plus" />
-            </button>
-          </>
+          <button type="button" className="iconbtn" onClick={addSong} aria-label="Add song">
+            <Icon name="plus" />
+          </button>
         }
       />
       <div className="searchwrap">
@@ -92,18 +82,9 @@ export function SongLibrary() {
           title="No songs yet"
           body="Add every song you can play — notes, tutorial links, tags and all."
           action={
-            <div className="stack stack--empty">
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={() => navigate('/import')}
-              >
-                <Icon name="scan" size={18} /> Import from a screenshot
-              </button>
-              <button type="button" className="btn" onClick={addSong}>
-                Add a song by hand
-              </button>
-            </div>
+            <button type="button" className="btn btn--primary" onClick={addSong}>
+              Add your first song
+            </button>
           }
         />
       ) : total === 0 ? (

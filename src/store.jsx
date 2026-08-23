@@ -42,6 +42,7 @@ export function LibraryProvider({ children }) {
             Array.isArray(song.imageIds) &&
             typeof song.artist === 'string' &&
             typeof song.appleMusicUrl === 'string' &&
+            typeof song.tempoConfidence === 'string' &&
             isCountInLine(song.notes[0])
           ) {
             return song
@@ -53,6 +54,12 @@ export function LibraryProvider({ children }) {
               typeof song.appleMusicUrl === 'string' ? song.appleMusicUrl : '',
             appleMusicSource:
               typeof song.appleMusicSource === 'string' ? song.appleMusicSource : '',
+            appleMusicTrack: song.appleMusicTrack || null,
+            bpm: Number.isFinite(song.bpm) ? song.bpm : null,
+            tempoConfidence:
+              typeof song.tempoConfidence === 'string' ? song.tempoConfidence : '',
+            tempoCheckedUrl:
+              typeof song.tempoCheckedUrl === 'string' ? song.tempoCheckedUrl : '',
             notes: withCountIn(song.notes),
             imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
           }

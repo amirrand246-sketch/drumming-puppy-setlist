@@ -40,23 +40,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        // The OCR engine is ~11 MB; it is cached on first use instead of upfront.
-        globIgnores: ['**/ocr/**'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/ocr\//],
         cleanupOutdatedCaches: true,
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith('/ocr/'),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'ocr-engine',
-              expiration: { maxEntries: 8, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-              rangeRequests: true,
-            },
-          },
-        ],
       },
       devOptions: { enabled: false },
     }),

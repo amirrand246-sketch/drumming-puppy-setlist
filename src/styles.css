@@ -1720,3 +1720,88 @@ ul.gig__notes li::before {
 .notes__item--fixed .notes__dot {
   background: var(--text);
 }
+
+/* ---------- tempo + metronome ---------- */
+
+.tempo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 10px;
+}
+
+.tempo__note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tempo__flag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--tone-1);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.metro {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--sep);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.metro--on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.metro__beat {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.25;
+  transition: opacity 90ms linear, transform 90ms linear;
+}
+
+.metro__beat--hit {
+  opacity: 1;
+  transform: scale(1.5);
+}
+
+/* Gig mode keeps it quiet: it sits under the title, out of the way. */
+.metro--gig {
+  margin: 0 0 18px;
+  min-height: 38px;
+  padding: 0 12px;
+  background: #17171c;
+  border-color: #2b2b33;
+  color: #d8d8e0;
+  font-size: 13px;
+}
+
+.metro--gig.metro--on {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #101010;
+}
+
+.tempo__credit {
+  font-size: 11px;
+  color: var(--faint);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -3,9 +3,10 @@ import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
 import { DIFFICULTIES, formatDate, hasNotes, toNoteLines, todayISO, uid } from '../model.js'
 import { ConfirmDialog, Icon, TopBar } from './ui.jsx'
-import { prepareImage } from '../ocr.js'
+import { prepareImage } from '../images.js'
 import { NotesList } from './NotesList.jsx'
 import { AppleMusicLink } from './AppleMusicLink.jsx'
+import { TempoRow } from './Tempo.jsx'
 
 function normaliseUrl(url) {
   const trimmed = url.trim()
@@ -216,6 +217,7 @@ export function SongProfile({ songId, isNew }) {
             />
           </div>
           <AppleMusicLink song={song} patch={patch} />
+          <TempoRow song={song} patch={patch} />
         </div>
 
         <div className="card">

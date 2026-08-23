@@ -30,6 +30,21 @@ function cleanSong(raw) {
     // A link only survives the round trip if it still looks like Apple Music.
     appleMusicUrl: isAppleMusicUrl(str(raw.appleMusicUrl, 2000)) ? str(raw.appleMusicUrl, 2000).trim() : '',
     appleMusicSource: ['auto', 'manual'].includes(raw.appleMusicSource) ? raw.appleMusicSource : '',
+    appleMusicTrack:
+      raw.appleMusicTrack && typeof raw.appleMusicTrack === 'object'
+        ? {
+            url: str(raw.appleMusicTrack.url, 2000),
+            trackName: str(raw.appleMusicTrack.trackName, 200),
+            artistName: str(raw.appleMusicTrack.artistName, 200),
+            collectionName: str(raw.appleMusicTrack.collectionName, 200),
+            trackTimeMillis: Number(raw.appleMusicTrack.trackTimeMillis) || 0,
+          }
+        : null,
+    bpm: Number.isFinite(Number(raw.bpm)) && Number(raw.bpm) > 0 ? Math.round(Number(raw.bpm)) : null,
+    tempoConfidence: ['confirmed', 'unconfirmed', 'unavailable'].includes(raw.tempoConfidence)
+      ? raw.tempoConfidence
+      : '',
+    tempoCheckedUrl: str(raw.tempoCheckedUrl, 2000),
     notes,
     tutorialLinks: list(raw.tutorialLinks)
       .map((link) => ({

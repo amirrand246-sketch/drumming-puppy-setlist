@@ -40,7 +40,14 @@ export function AppleMusicLink({ song, patch }) {
     try {
       const match = await findSong(song.name, song.artist)
       if (!match) return setStatus('notfound')
-      patch({ appleMusicUrl: match.url, appleMusicSource: 'auto' })
+      patch({
+        appleMusicUrl: match.url,
+        appleMusicSource: 'auto',
+        appleMusicTrack: match,
+        bpm: null,
+        tempoConfidence: '',
+        tempoCheckedUrl: '',
+      })
       setStatus('')
       setFound(match)
       // The search broke the user gesture, so a pop-up can be refused; when it
@@ -53,7 +60,14 @@ export function AppleMusicLink({ song, patch }) {
   }
 
   const reset = () => {
-    patch({ appleMusicUrl: '', appleMusicSource: '' })
+    patch({
+      appleMusicUrl: '',
+      appleMusicSource: '',
+      appleMusicTrack: null,
+      bpm: null,
+      tempoConfidence: '',
+      tempoCheckedUrl: '',
+    })
     setFound(null)
     setStatus('')
   }
@@ -124,7 +138,14 @@ export function AppleMusicLink({ song, patch }) {
           }
           onCancel={() => setEditing(false)}
           onConfirm={(value) => {
-            patch({ appleMusicUrl: value, appleMusicSource: 'manual' })
+            patch({
+              appleMusicUrl: value,
+              appleMusicSource: 'manual',
+              appleMusicTrack: null,
+              bpm: null,
+              tempoConfidence: '',
+              tempoCheckedUrl: '',
+            })
             setFound(null)
             setStatus('')
             setEditing(false)

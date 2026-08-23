@@ -3,6 +3,7 @@ import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
 import { countInBody, isCountInLine, toNoteLines, todayISO } from '../model.js'
 import { Icon } from './ui.jsx'
+import { MetronomeButton } from './Tempo.jsx'
 
 const SCALE_KEY = 'dps:gigScale'
 const SCALES = [1, 1.15, 1.35, 1.6]
@@ -268,6 +269,18 @@ export function GigMode({ setlistId }) {
           <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
             {song.name || 'Untitled song'}
           </h1>
+          {song.bpm && (
+            <MetronomeButton
+              key={song.id}
+              bpm={song.bpm}
+              className="metro--gig"
+              label={
+                song.tempoConfidence === 'unconfirmed'
+                  ? `${song.bpm} BPM · unconfirmed`
+                  : `${song.bpm} BPM`
+              }
+            />
+          )}
           {noteLines.length > 0 ? (
             <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
               {noteLines.map((line, i) => (
