@@ -223,6 +223,17 @@ export function SongProfile({ songId, isNew }) {
         </div>
 
         <div className="card">
+          <label className="field">
+            <span className="field__label">Notes</span>
+            <AutoTextarea
+              value={song.notes}
+              onChange={(value) => patch({ notes: value })}
+              placeholder="Playing notes, cues, quirks — count-ins, tricky fills, tempo…"
+            />
+          </label>
+        </div>
+
+        <div className="card">
           <div className="field">
             <span className="field__label">Difficulty</span>
             <div className="segmented" role="group" aria-label="Difficulty">
@@ -364,17 +375,6 @@ export function SongProfile({ songId, isNew }) {
         </div>
 
         <Attachments song={song} patch={patch} />
-
-        <div className="card">
-          <label className="field">
-            <span className="field__label">Notes</span>
-            <AutoTextarea
-              value={song.notes}
-              onChange={(value) => patch({ notes: value })}
-              placeholder="Playing notes, cues, quirks — count-ins, tricky fills, tempo…"
-            />
-          </label>
-        </div>
 
         <button
           type="button"
