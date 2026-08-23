@@ -1,31 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { DIFFICULTIES, formatDate, todayISO, uid } from '../model.js'
+import { DIFFICULTIES, formatDate, hasNotes, toNoteLines, todayISO, uid } from '../model.js'
 import { ConfirmDialog, Icon, TopBar } from './ui.jsx'
 import { prepareImage } from '../ocr.js'
-
-function AutoTextarea({ value, onChange, placeholder }) {
-  const ref = useRef(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
-  }, [value])
-
-  return (
-    <textarea
-      ref={ref}
-      className="field__textarea"
-      value={value}
-      placeholder={placeholder}
-      onChange={(event) => onChange(event.target.value)}
-      rows={3}
-    />
-  )
-}
+import { NotesList } from './NotesList.jsx'
 
 function normaliseUrl(url) {
   const trimmed = url.trim()
@@ -187,7 +166,7 @@ export function SongProfile({ songId, isNew }) {
 
   const goBack = () => {
     // A song added and then abandoned without a name shouldn't clutter the library.
-    if (!song.name.trim() && !song.notes.trim() && song.tags.length === 0) {
+    if (!song.name.trim() && !hasNotes(song) && song.tags.length === 0) {
       deleteSong(song.id)
       navigate('/songs', { replace: true })
       return
@@ -223,14 +202,14 @@ export function SongProfile({ songId, isNew }) {
         </div>
 
         <div className="card">
-          <label className="field">
+          <div className="field">
             <span className="field__label">Notes</span>
-            <AutoTextarea
-              value={song.notes}
-              onChange={(value) => patch({ notes: value })}
-              placeholder="Playing notes, cues, quirks — count-ins, tricky fills, tempo…"
+            <NotesList
+              lines={toNoteLines(song.notes)}
+              onChange={(lines) => patch({ notes: lines })}
+              placeholder="Playing notes, cues, quirks — one per line"
             />
-          </label>
+          </div>
         </div>
 
         <div className="card">

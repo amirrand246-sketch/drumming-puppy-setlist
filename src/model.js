@@ -12,7 +12,7 @@ export function newSong(name = '') {
   return {
     id: uid('song'),
     name,
-    notes: '',
+    notes: [],
     tutorialLinks: [],
     tags: [],
     difficulty: '',
@@ -31,6 +31,29 @@ export function newSetlist(name = 'Untitled Set') {
     createdAt: now,
     updatedAt: now,
   }
+}
+
+/**
+ * Notes are a list of bullets. Songs saved before that change hold a single
+ * block of text, so anything read off disk — or out of a backup file, or the
+ * screenshot importer — comes through here and is split on its line breaks.
+ * A paragraph with no line breaks simply becomes one bullet.
+ */
+export function toNoteLines(notes) {
+  if (Array.isArray(notes)) {
+    return notes.filter((line) => typeof line === 'string')
+  }
+  if (typeof notes === 'string') {
+    return notes
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^\s*[-*•·]\s+/, '').trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
+export function hasNotes(song) {
+  return toNoteLines(song?.notes).some((line) => line.trim())
 }
 
 /** Ignore a leading article so "The Chicken" files under C, contacts-style. */

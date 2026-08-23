@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { todayISO } from '../model.js'
+import { toNoteLines, todayISO } from '../model.js'
 import { Icon } from './ui.jsx'
 
 const SCALE_KEY = 'dps:gigScale'
@@ -167,6 +167,7 @@ export function GigMode({ setlistId }) {
   const song = songs[index]
   const next = songs[index + 1]
   const atEnd = index === songs.length - 1
+  const noteLines = toNoteLines(song.notes).filter((line) => line.trim())
 
   return (
     <div className="gig">
@@ -220,10 +221,13 @@ export function GigMode({ setlistId }) {
         <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
           {song.name || 'Untitled song'}
         </h1>
-        {song.notes.trim() ? (
-          <p className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
-            {song.notes}
-          </p>
+        {noteLines.length > 0 ? (
+          <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
+            {noteLines.map((line, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- read-only list
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
         ) : (
           <p className="gig__nonotes">No notes for this one.</p>
         )}

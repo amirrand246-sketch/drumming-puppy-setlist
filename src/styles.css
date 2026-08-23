@@ -1437,3 +1437,81 @@ body.gig-open {
   font-size: 14px;
   color: var(--danger);
 }
+
+/* ---------- bulleted notes ---------- */
+
+.notes {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notes__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 4px 2px;
+  border-radius: 10px;
+}
+
+.notes__item:focus-within {
+  background: var(--accent-soft);
+}
+
+.notes__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.notes__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.45;
+}
+
+.notes__input::placeholder {
+  color: var(--faint);
+}
+
+/* Bullets in gig mode: same list, read-only and much larger. */
+ul.gig__notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+}
+
+ul.gig__notes li {
+  position: relative;
+  padding-left: 1.15em;
+  line-height: 1.45;
+  color: #eaeaf0;
+}
+
+ul.gig__notes li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 0.32em;
+  height: 0.32em;
+  border-radius: 50%;
+  background: var(--accent);
+}

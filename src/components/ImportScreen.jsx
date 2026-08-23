@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { navigate } from '../router.js'
-import { DIFFICULTIES, uid } from '../model.js'
+import { DIFFICULTIES, toNoteLines, uid } from '../model.js'
 import { mergeCandidates, parseNotesText } from '../parseNotes.js'
 import { prepareImage, recognize, release } from '../ocr.js'
 import { EmptyState, Icon, TopBar } from './ui.jsx'
@@ -185,7 +185,7 @@ export function ImportScreen() {
     const created = createSongs(
       chosen.map((item) => ({
         name: item.name.trim(),
-        notes: item.notes.trim(),
+        notes: toNoteLines(item.notes),
         tags: item.tags,
         difficulty: item.difficulty,
         lastPlayed: item.lastPlayed,

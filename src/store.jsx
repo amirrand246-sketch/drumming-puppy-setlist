@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react'
 import * as storage from './storage.js'
-import { compareSongs, newSetlist, newSong, uid } from './model.js'
+import { compareSongs, newSetlist, newSong, toNoteLines, uid } from './model.js'
 import { BACKUP_APP, BACKUP_VERSION } from './backup.js'
 
 const LibraryContext = createContext(null)
@@ -25,8 +25,24 @@ export function LibraryProvider({ children }) {
     Promise.all([storage.getAll('songs'), storage.getAll('setlists')])
       .then(([loadedSongs, loadedSetlists]) => {
         if (cancelled) return
-        setSongs(loadedSongs)
+        // Bring older records up to the current shape, and write the migration
+        // back so it only ever happens once.
+        const stale = []
+        const migrated = loadedSongs.map((song) => {
+          if (Array.isArray(song.notes) && Array.isArray(song.imageIds)) return song
+          const next = {
+            ...song,
+            notes: toNoteLines(song.notes),
+            imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
+          }
+          stale.push(next)
+          return next
+        })
+        setSongs(migrated)
         setSetlists(loadedSetlists)
+        for (const song of stale) {
+          storage.put('songs', song).catch((err) => console.error('Migration failed', err))
+        }
       })
       .catch((err) => console.error('Could not load local data', err))
       .finally(() => {

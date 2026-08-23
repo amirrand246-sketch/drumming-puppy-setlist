@@ -3,7 +3,7 @@
  * Anything coming back in is treated as untrusted: every record is rebuilt field
  * by field, so a truncated or hand-edited file can't corrupt the library.
  */
-import { DIFFICULTIES, uid } from './model.js'
+import { DIFFICULTIES, toNoteLines, uid } from './model.js'
 
 export const BACKUP_APP = 'drumming-puppys-setlist'
 export const BACKUP_VERSION = 1
@@ -16,8 +16,11 @@ const isoDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '')
 function cleanSong(raw) {
   if (!raw || typeof raw !== 'object') return null
   const name = str(raw.name, 200).trim()
-  const notes = str(raw.notes, 20000)
-  if (!name && !notes) return null
+  // Backups written before notes became a list hold one block of text.
+  const notes = toNoteLines(raw.notes)
+    .map((line) => str(line, 2000))
+    .slice(0, 500)
+  if (!name && notes.length === 0) return null
   return {
     id: str(raw.id, 80) || uid('song'),
     name,
