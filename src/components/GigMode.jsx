@@ -275,6 +275,16 @@ export function GigMode({ setlistId }) {
           ) : (
             <p className="gig__nonotes">No notes for this one.</p>
           )}
+
+          <button
+            type="button"
+            className="gig__pill"
+            onClick={() => setOverview(true)}
+            aria-label="Show the whole set"
+          >
+            <Icon name="list" size={18} />
+            Set list
+          </button>
         </div>
       )}
 
