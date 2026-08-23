@@ -8,7 +8,6 @@ const plural = (count, word) => `${count} ${count === 1 ? word : `${word}s`}`
 
 export function BackupScreen() {
   const { songs, setlists, exportAll, importAll } = useLibrary()
-  const [includeImages, setIncludeImages] = useState(true)
   const [bundle, setBundle] = useState(null)
   const [incoming, setIncoming] = useState(null)
   const [confirmReplace, setConfirmReplace] = useState(false)
@@ -22,12 +21,11 @@ export function BackupScreen() {
   useEffect(() => {
     let cancelled = false
     setBundle(null)
-    exportAll({ includeImages })
+    exportAll()
       .then((data) => {
         if (cancelled) return
-        const json = JSON.stringify(data)
-        const blob = new Blob([json], { type: 'application/json' })
-        setBundle({ blob, size: blob.size, images: data.images.length })
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
+        setBundle({ blob, size: blob.size })
       })
       .catch((err) => {
         console.error(err)
@@ -36,7 +34,7 @@ export function BackupScreen() {
     return () => {
       cancelled = true
     }
-  }, [exportAll, includeImages])
+  }, [exportAll])
 
   const exportNow = async () => {
     if (!bundle) return
@@ -121,7 +119,6 @@ export function BackupScreen() {
             <span className="field__label">This phone holds</span>
             <p className="backup__stats">
               {plural(songs.length, 'song')} · {plural(setlists.length, 'setlist')}
-              {bundle ? ` · ${plural(bundle.images, 'screenshot')}` : ''}
             </p>
             <p className="field__hint">
               Nothing here is synced or backed up on its own. Export a file now and again
@@ -133,14 +130,6 @@ export function BackupScreen() {
         <div className="card">
           <div className="field">
             <span className="field__label">Export</span>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={includeImages}
-                onChange={(event) => setIncludeImages(event.target.checked)}
-              />
-              <span>Include screenshots</span>
-            </label>
             <button
               type="button"
               className="btn btn--primary btn--block"
@@ -176,8 +165,7 @@ export function BackupScreen() {
               <div className="backup__incoming">
                 <p className="backup__stats">
                   {incoming.filename}: {plural(incoming.songs.length, 'song')},{' '}
-                  {plural(incoming.setlists.length, 'setlist')},{' '}
-                  {plural(incoming.images.length, 'screenshot')}
+                  {plural(incoming.setlists.length, 'setlist')}
                   {incoming.exportedAt ? ` · exported ${incoming.exportedAt.slice(0, 10)}` : ''}
                 </p>
                 <button

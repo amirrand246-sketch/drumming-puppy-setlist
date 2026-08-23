@@ -24,7 +24,6 @@ export function newSong(name = '') {
     tags: [],
     difficulty: '',
     lastPlayed: '',
-    imageIds: [],
     createdAt: Date.now(),
   }
 }

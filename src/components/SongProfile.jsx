@@ -3,7 +3,6 @@ import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
 import { DIFFICULTIES, formatDate, hasNotes, toNoteLines, todayISO, uid } from '../model.js'
 import { ConfirmDialog, Icon, TopBar } from './ui.jsx'
-import { prepareImage } from '../images.js'
 import { NotesList } from './NotesList.jsx'
 import { AppleMusicLink } from './AppleMusicLink.jsx'
 import { TempoRow } from './Tempo.jsx'
@@ -13,102 +12,6 @@ function normaliseUrl(url) {
   if (!trimmed) return ''
   if (/^https?:\/\//i.test(trimmed)) return trimmed
   return `https://${trimmed}`
-}
-
-/** Screenshots kept with a song — the page you imported it from, a chart, a setlist photo. */
-function Attachments({ song, patch }) {
-  const { loadImage, saveImage, deleteImage } = useLibrary()
-  const [images, setImages] = useState([])
-  const [viewing, setViewing] = useState(null)
-  const [busy, setBusy] = useState(false)
-  const fileRef = useRef(null)
-
-  useEffect(() => {
-    let cancelled = false
-    const ids = song.imageIds || []
-    if (ids.length === 0) {
-      setImages([])
-      return undefined
-    }
-    Promise.all(ids.map((id) => loadImage(id)))
-      .then((loaded) => {
-        if (!cancelled) setImages(loaded.filter(Boolean))
-      })
-      .catch((err) => console.error('Could not load images', err))
-    return () => {
-      cancelled = true
-    }
-  }, [song.imageIds, loadImage])
-
-  const onFiles = async (event) => {
-    const files = [...event.target.files].filter((file) => file.type.startsWith('image/'))
-    event.target.value = ''
-    if (files.length === 0) return
-    setBusy(true)
-    try {
-      const ids = []
-      for (const file of files) {
-        const { dataUrl } = await prepareImage(file)
-        ids.push(saveImage(dataUrl))
-      }
-      patch({ imageIds: [...(song.imageIds || []), ...ids] })
-    } catch (err) {
-      console.error('Could not attach image', err)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const remove = (id) => {
-    deleteImage(id)
-    patch({ imageIds: (song.imageIds || []).filter((imageId) => imageId !== id) })
-  }
-
-  return (
-    <div className="card">
-      <div className="field">
-        <span className="field__label">Screenshots</span>
-        {images.length > 0 && (
-          <div className="shots">
-            {images.map((image) => (
-              <div key={image.id} className="shots__item">
-                <button type="button" onClick={() => setViewing(image)}>
-                  <img src={image.dataUrl} alt="Attached screenshot" />
-                </button>
-                <button
-                  type="button"
-                  className="shots__remove"
-                  aria-label="Remove screenshot"
-                  onClick={() => remove(image.id)}
-                >
-                  <Icon name="close" size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={onFiles} />
-        <button
-          type="button"
-          className="btn btn--small"
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
-        >
-          <Icon name="image" size={16} /> {busy ? 'Adding…' : 'Add screenshot'}
-        </button>
-      </div>
-
-      {viewing && (
-        <div className="lightbox" role="dialog" aria-modal="true">
-          <button type="button" className="lightbox__scrim" aria-label="Close" onClick={() => setViewing(null)} />
-          <img src={viewing.dataUrl} alt="Attached screenshot" />
-          <button type="button" className="lightbox__close" onClick={() => setViewing(null)}>
-            <Icon name="close" size={22} />
-          </button>
-        </div>
-      )}
-    </div>
-  )
 }
 
 export function SongProfile({ songId, isNew }) {
@@ -371,8 +274,6 @@ export function SongProfile({ songId, isNew }) {
             </button>
           </div>
         </div>
-
-        <Attachments song={song} patch={patch} />
 
         <button
           type="button"

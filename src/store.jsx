@@ -39,16 +39,17 @@ export function LibraryProvider({ children }) {
         const migrated = loadedSongs.map((song) => {
           if (
             Array.isArray(song.notes) &&
-            Array.isArray(song.imageIds) &&
             typeof song.artist === 'string' &&
             typeof song.appleMusicUrl === 'string' &&
             typeof song.tempoConfidence === 'string' &&
+            song.imageIds === undefined &&
             isCountInLine(song.notes[0])
           ) {
             return song
           }
+          const { imageIds, ...rest } = song
           const next = {
-            ...song,
+            ...rest,
             artist: typeof song.artist === 'string' ? song.artist : '',
             appleMusicUrl:
               typeof song.appleMusicUrl === 'string' ? song.appleMusicUrl : '',
@@ -61,7 +62,6 @@ export function LibraryProvider({ children }) {
             tempoCheckedUrl:
               typeof song.tempoCheckedUrl === 'string' ? song.tempoCheckedUrl : '',
             notes: withCountIn(song.notes),
-            imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
           }
           stale.push(next)
           return next
@@ -133,37 +133,9 @@ export function LibraryProvider({ children }) {
     [enqueue],
   )
 
-  /** Screenshots live in their own store so song records stay small. */
-  const saveImage = useCallback(
-    (dataUrl) => {
-      const image = { id: uid('img'), dataUrl, createdAt: Date.now() }
-      enqueue(() => storage.put('images', image))
-      return image.id
-    },
-    [enqueue],
-  )
-
-  const loadImage = useCallback(async (id) => {
-    const all = await storage.getAll('images')
-    return all.find((image) => image.id === id) || null
-  }, [])
-
-  const deleteImage = useCallback(
-    (id) => {
-      enqueue(() => storage.remove('images', id))
-    },
-    [enqueue],
-  )
-
   const deleteSong = useCallback(
     (id) => {
-      setSongs((prev) => {
-        const song = prev.find((item) => item.id === id)
-        for (const imageId of song?.imageIds || []) {
-          enqueue(() => storage.remove('images', imageId))
-        }
-        return prev.filter((item) => item.id !== id)
-      })
+      setSongs((prev) => prev.filter((item) => item.id !== id))
       // A deleted song must also leave every setlist that referenced it.
       setSetlists((prev) => {
         const touched = []
@@ -241,21 +213,13 @@ export function LibraryProvider({ children }) {
 
   /** Everything in the library, as a plain object ready to be written to a file. */
   const exportAll = useCallback(
-    async ({ includeImages = true } = {}) => {
-      const images = includeImages ? await storage.getAll('images') : []
-      const kept = new Set(images.map((image) => image.id))
-      return {
-        app: BACKUP_APP,
-        version: BACKUP_VERSION,
-        exportedAt: new Date().toISOString(),
-        songs: songs.map((song) => ({
-          ...song,
-          imageIds: (song.imageIds || []).filter((id) => kept.has(id)),
-        })),
-        setlists,
-        images,
-      }
-    },
+    async () => ({
+      app: BACKUP_APP,
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      songs,
+      setlists,
+    }),
     [songs, setlists],
   )
 
@@ -266,22 +230,12 @@ export function LibraryProvider({ children }) {
   const importAll = useCallback(
     async (backup, mode = 'merge') => {
       if (mode === 'replace') {
-        await Promise.all([
-          storage.clear('songs'),
-          storage.clear('setlists'),
-          storage.clear('images'),
-        ])
-        for (const image of backup.images) await storage.put('images', image)
+        await Promise.all([storage.clear('songs'), storage.clear('setlists')])
         for (const song of backup.songs) await storage.put('songs', song)
         for (const set of backup.setlists) await storage.put('setlists', set)
         setSongs(backup.songs)
         setSetlists(backup.setlists)
-        return {
-          songs: backup.songs.length,
-          setlists: backup.setlists.length,
-          images: backup.images.length,
-          skipped: 0,
-        }
+        return { songs: backup.songs.length, setlists: backup.setlists.length, skipped: 0 }
       }
 
       const existingIds = new Set(songs.map((song) => song.id))
@@ -297,10 +251,6 @@ export function LibraryProvider({ children }) {
         .filter((set) => !setIds.has(set.id) && !setNames.has(set.name.trim().toLowerCase()))
         .map((set) => ({ ...set, songIds: set.songIds.filter((id) => keptSongIds.has(id)) }))
 
-      const wantedImages = new Set(newSongs.flatMap((song) => song.imageIds))
-      const newImages = backup.images.filter((image) => wantedImages.has(image.id))
-
-      for (const image of newImages) await storage.put('images', image)
       for (const song of newSongs) await storage.put('songs', song)
       for (const set of newSetlists) await storage.put('setlists', set)
 
@@ -310,7 +260,6 @@ export function LibraryProvider({ children }) {
       return {
         songs: newSongs.length,
         setlists: newSetlists.length,
-        images: newImages.length,
         skipped: backup.songs.length - newSongs.length,
       }
     },
@@ -340,9 +289,6 @@ export function LibraryProvider({ children }) {
       createSongs,
       updateSong,
       deleteSong,
-      saveImage,
-      loadImage,
-      deleteImage,
       createSetlist,
       updateSetlist,
       deleteSetlist,
@@ -359,9 +305,6 @@ export function LibraryProvider({ children }) {
       createSongs,
       updateSong,
       deleteSong,
-      saveImage,
-      loadImage,
-      deleteImage,
       createSetlist,
       updateSetlist,
       deleteSetlist,

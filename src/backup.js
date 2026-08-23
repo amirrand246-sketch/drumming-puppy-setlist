@@ -60,7 +60,6 @@ function cleanSong(raw) {
       .slice(0, 40),
     difficulty: DIFFICULTIES.includes(raw.difficulty) ? raw.difficulty : '',
     lastPlayed: isoDate(str(raw.lastPlayed, 10)),
-    imageIds: list(raw.imageIds).map((id) => str(id, 80)).filter(Boolean).slice(0, 20),
     createdAt: time(raw.createdAt),
   }
 }
@@ -78,13 +77,6 @@ function cleanSetlist(raw) {
   }
 }
 
-function cleanImage(raw) {
-  if (!raw || typeof raw !== 'object') return null
-  const dataUrl = typeof raw.dataUrl === 'string' ? raw.dataUrl : ''
-  if (!/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(dataUrl)) return null
-  return { id: str(raw.id, 80) || uid('img'), dataUrl, createdAt: time(raw.createdAt) }
-}
-
 /** Validate and rebuild a parsed backup file. Throws if it isn't one. */
 export function normaliseBackup(raw) {
   if (!raw || typeof raw !== 'object') throw new Error('That file is not a backup.')
@@ -97,19 +89,14 @@ export function normaliseBackup(raw) {
 
   const songs = list(raw.songs).map(cleanSong).filter(Boolean)
   const setlists = list(raw.setlists).map(cleanSetlist).filter(Boolean)
-  const images = list(raw.images).map(cleanImage).filter(Boolean)
 
   // Drop references that point at records the file doesn't actually contain.
   const songIds = new Set(songs.map((song) => song.id))
-  const imageIds = new Set(images.map((image) => image.id))
-  for (const song of songs) {
-    song.imageIds = song.imageIds.filter((id) => imageIds.has(id))
-  }
   for (const set of setlists) {
     set.songIds = set.songIds.filter((id) => songIds.has(id))
   }
 
-  return { songs, setlists, images, exportedAt: str(raw.exportedAt, 40) }
+  return { songs, setlists, exportedAt: str(raw.exportedAt, 40) }
 }
 
 export function backupFilename(date = new Date()) {

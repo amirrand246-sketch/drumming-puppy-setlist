@@ -8,8 +8,10 @@
  */
 
 const DB_NAME = 'drumming-puppy-setlist'
-const DB_VERSION = 2
-const STORES = ['songs', 'setlists', 'images']
+const DB_VERSION = 3
+const STORES = ['songs', 'setlists']
+// Held song screenshots until that feature was removed; dropped on upgrade.
+const RETIRED_STORES = ['images']
 const LS_PREFIX = 'dps:'
 
 let dbPromise = null
@@ -35,6 +37,9 @@ function openDB() {
         if (!db.objectStoreNames.contains(name)) {
           db.createObjectStore(name, { keyPath: 'id' })
         }
+      }
+      for (const name of RETIRED_STORES) {
+        if (db.objectStoreNames.contains(name)) db.deleteObjectStore(name)
       }
     }
     request.onsuccess = () => resolve(request.result)

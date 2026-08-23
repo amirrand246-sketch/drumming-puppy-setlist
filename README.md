@@ -26,8 +26,8 @@ and works offline after the first load.
 
 - **Song Library** — alphabetical sections with an A–Z index rail, search across
   names and tags. "The Chicken" files under C.
-- **Song Profile** — name, notes, any number of tutorial links, tags, difficulty,
-  last played, attached screenshots. Edits save as you type.
+- **Song Profile** — name, artist, notes, any number of tutorial links, tags,
+  difficulty, last played. Edits save as you type.
 - **Setlists** — build an ad hoc list, drag songs into running order with a
   handle (or arrow keys), then save it with a name. Rename, duplicate, delete.
 - **Live gig mode** — open a setlist and hit *Start gig mode*: full-screen, dark,
@@ -48,9 +48,9 @@ and works offline after the first load.
 
 ## Storage
 
-IndexedDB (`drumming-puppy-setlist`), with a localStorage fallback for browsers
-that block it, e.g. iOS private windows. Stores: `songs`, `setlists`, `images`.
-Screenshots are downscaled to 1280px JPEG before being stored.
+IndexedDB (`drumming-puppy-setlist`, version 3), with a localStorage fallback for
+browsers that block it, e.g. iOS private windows. Stores: `songs`, `setlists`.
+Version 3 drops the old `images` store that held song screenshots.
 
 Data survives app close, reopen and phone restarts. Nothing is synced, so the
 export file under **Backup & restore** is the only copy that outlives the
@@ -80,7 +80,6 @@ src/
   appleMusic.js   iTunes search and lookup, match confidence
   tempo.js        GetSongBPM lookup plus the version cross-check
   metronome.js    Web Audio click scheduling
-  images.js       downscaling for attached screenshots
   router.js       hash routing
   components/     screens and shared UI
 ```
