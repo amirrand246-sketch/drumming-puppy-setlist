@@ -69,6 +69,13 @@ IndexedDB cache) the importer works with no network at all.
 automatically. Bumping `tesseract.js` or `tesseract.js-core` means re-running it
 so the self-hosted core matches the library version.
 
+## Icons
+
+Every icon is generated from `icons-src/logo.png` by `node scripts/make-icons.mjs`
+— PNGs at 64/180/192/512, a maskable 512 padded onto the logo's own `#101010`
+field, and a favicon. It needs a local Chromium and is run by hand after the
+logo changes, not during the build; the generated files are committed.
+
 ## Deploying
 
 Netlify reads `netlify.toml`, so connecting this repo needs no settings typed in:

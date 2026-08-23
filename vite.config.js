@@ -13,7 +13,6 @@ export default defineConfig({
       includeAssets: [
         'icons/favicon.ico',
         'icons/apple-touch-icon-180.png',
-        'icons/icon.svg',
       ],
       manifest: {
         id: '/',
