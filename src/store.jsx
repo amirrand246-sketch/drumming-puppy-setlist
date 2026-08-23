@@ -8,7 +8,15 @@ import {
   useState,
 } from 'react'
 import * as storage from './storage.js'
-import { compareSongs, newSetlist, newSong, toNoteLines, uid } from './model.js'
+import {
+  compareSongs,
+  isCountInLine,
+  newSetlist,
+  newSong,
+  toNoteLines,
+  uid,
+  withCountIn,
+} from './model.js'
 import { BACKUP_APP, BACKUP_VERSION } from './backup.js'
 
 const LibraryContext = createContext(null)
@@ -33,7 +41,8 @@ export function LibraryProvider({ children }) {
             Array.isArray(song.notes) &&
             Array.isArray(song.imageIds) &&
             typeof song.artist === 'string' &&
-            typeof song.appleMusicUrl === 'string'
+            typeof song.appleMusicUrl === 'string' &&
+            isCountInLine(song.notes[0])
           ) {
             return song
           }
@@ -44,7 +53,7 @@ export function LibraryProvider({ children }) {
               typeof song.appleMusicUrl === 'string' ? song.appleMusicUrl : '',
             appleMusicSource:
               typeof song.appleMusicSource === 'string' ? song.appleMusicSource : '',
-            notes: toNoteLines(song.notes),
+            notes: withCountIn(song.notes),
             imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
           }
           stale.push(next)
@@ -104,7 +113,10 @@ export function LibraryProvider({ children }) {
   /** Create several songs at once — used by the screenshot importer. */
   const createSongs = useCallback(
     (drafts) => {
-      const created = drafts.map((draft) => ({ ...newSong(draft.name || ''), ...draft }))
+      const created = drafts.map((draft) => {
+        const song = { ...newSong(draft.name || ''), ...draft }
+        return { ...song, notes: withCountIn(song.notes) }
+      })
       setSongs((prev) => [...prev, ...created])
       enqueue(async () => {
         for (const song of created) await storage.put('songs', song)

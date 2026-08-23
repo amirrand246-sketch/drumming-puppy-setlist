@@ -1704,3 +1704,19 @@ ul.gig__notes li::before {
   font-weight: 560;
   color: var(--danger);
 }
+
+/* The count-in label sits outside the field, so it cannot be typed over. */
+.notes__prefix {
+  flex: none;
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 640;
+  line-height: 1.45;
+  color: var(--muted);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.notes__item--fixed .notes__dot {
+  background: var(--text);
+}

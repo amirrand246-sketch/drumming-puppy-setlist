@@ -4,7 +4,7 @@
  * by field, so a truncated or hand-edited file can't corrupt the library.
  */
 import { isAppleMusicUrl } from './appleMusic.js'
-import { DIFFICULTIES, toNoteLines, uid } from './model.js'
+import { DIFFICULTIES, toNoteLines, uid, withCountIn } from './model.js'
 
 export const BACKUP_APP = 'drumming-puppys-setlist'
 export const BACKUP_VERSION = 1
@@ -18,10 +18,11 @@ function cleanSong(raw) {
   if (!raw || typeof raw !== 'object') return null
   const name = str(raw.name, 200).trim()
   // Backups written before notes became a list hold one block of text.
-  const notes = toNoteLines(raw.notes)
-    .map((line) => str(line, 2000))
-    .slice(0, 500)
-  if (!name && notes.length === 0) return null
+  const notes = withCountIn(toNoteLines(raw.notes).map((line) => str(line, 2000))).slice(0, 500)
+  // A count-in label on its own is not content; it is on every song.
+  if (!name && !notes.some((line, i) => (i === 0 ? line.replace(/^\s*count-?in\s*:\s*/i, '') : line).trim())) {
+    return null
+  }
   return {
     id: str(raw.id, 80) || uid('song'),
     name,

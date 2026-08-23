@@ -15,7 +15,7 @@ export function newSong(name = '') {
     artist: '',
     appleMusicUrl: '',
     appleMusicSource: '',
-    notes: [],
+    notes: [COUNT_IN_PREFIX],
     tutorialLinks: [],
     tags: [],
     difficulty: '',
@@ -55,8 +55,38 @@ export function toNoteLines(notes) {
   return []
 }
 
+/** The first bullet of every song is a fixed count-in line. */
+export const COUNT_IN_PREFIX = 'Count-in:'
+const COUNT_IN_RE = /^\s*count-?in\s*:/i
+// Strips the label and only the single space that separates it, so a trailing
+// space survives being typed — trimming here eats spaces as you type.
+const COUNT_IN_STRIP = /^\s*count-?in\s*:\s?/i
+
+export function isCountInLine(line) {
+  return COUNT_IN_RE.test(line || '')
+}
+
+/** What the drummer actually typed, with the fixed label taken off. */
+export function countInBody(line) {
+  return (line || '').replace(COUNT_IN_STRIP, '')
+}
+
+export function composeCountIn(body) {
+  return body ? `${COUNT_IN_PREFIX} ${body}` : COUNT_IN_PREFIX
+}
+
+/** Put the count-in at the top, pushing anything already there down one. */
+export function withCountIn(notes) {
+  const lines = toNoteLines(notes)
+  if (lines.length > 0 && isCountInLine(lines[0])) return lines
+  return [COUNT_IN_PREFIX, ...lines]
+}
+
+/** An untouched count-in label on its own does not count as having notes. */
 export function hasNotes(song) {
-  return toNoteLines(song?.notes).some((line) => line.trim())
+  return toNoteLines(song?.notes).some((line, index) =>
+    (index === 0 && isCountInLine(line) ? countInBody(line) : line).trim(),
+  )
 }
 
 /** Ignore a leading article so "The Chicken" files under C, contacts-style. */

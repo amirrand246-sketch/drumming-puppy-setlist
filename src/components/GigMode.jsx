@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { toNoteLines, todayISO } from '../model.js'
+import { countInBody, isCountInLine, toNoteLines, todayISO } from '../model.js'
 import { Icon } from './ui.jsx'
 
 const SCALE_KEY = 'dps:gigScale'
@@ -177,7 +177,9 @@ export function GigMode({ setlistId }) {
   const next = songs[index + 1]
   const previous = songs[index - 1]
   const atEnd = index === songs.length - 1
-  const noteLines = toNoteLines(song.notes).filter((line) => line.trim())
+  const noteLines = toNoteLines(song.notes).filter((line, i) =>
+    (i === 0 && isCountInLine(line) ? countInBody(line) : line).trim(),
+  )
 
   return (
     <div className="gig">
