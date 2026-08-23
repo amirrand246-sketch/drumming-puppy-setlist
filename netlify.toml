@@ -1,0 +1,20 @@
+# Netlify picks these up automatically, so there is nothing to type into the
+# dashboard when connecting the repo.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The service worker must never be served from a stale cache, or the app can
+# get stuck on an old version.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

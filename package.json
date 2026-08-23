@@ -1,0 +1,24 @@
+{
+  "name": "drumming-puppys-setlist",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Drumming Puppy's Setlist — a local-first song library and setlist builder PWA",
+  "scripts": {
+    "dev": "npm run ocr:assets && vite",
+    "build": "npm run ocr:assets && vite build",
+    "preview": "vite preview",
+    "ocr:assets": "node scripts/copy-ocr-assets.mjs"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@vitejs/plugin-react": "^6.1.0",
+    "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
