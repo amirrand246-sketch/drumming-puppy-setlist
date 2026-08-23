@@ -275,16 +275,6 @@ export function GigMode({ setlistId }) {
           ) : (
             <p className="gig__nonotes">No notes for this one.</p>
           )}
-
-          <button
-            type="button"
-            className="gig__pill"
-            onClick={() => setOverview(true)}
-            aria-label="Show the whole set"
-          >
-            <Icon name="list" size={18} />
-            Set list
-          </button>
         </div>
       )}
 
@@ -299,7 +289,20 @@ export function GigMode({ setlistId }) {
           </button>
         ) : (
           <>
-            {next && <p className="gig__next">Next: {next.name || 'Untitled song'}</p>}
+            <button
+              type="button"
+              className="gig__pill"
+              onClick={() => setOverview(true)}
+              aria-label="Show the whole set"
+            >
+              <Icon name="list" size={18} />
+              Set list
+            </button>
+            {/* Always rendered, so the footer keeps its height and the pill above
+                it never shifts between songs. */}
+            <p className="gig__next">
+              {next ? `Next: ${next.name || 'Untitled song'}` : 'Last song in the set'}
+            </p>
             <div className="gig__nav">
               <button
                 type="button"

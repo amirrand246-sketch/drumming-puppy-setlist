@@ -1556,16 +1556,16 @@ ul.gig__notes li::before {
   white-space: nowrap;
 }
 
-/* A second, bigger way into the set list, sitting in the empty space under
-   the notes where there is nothing to hit by accident. */
+/* Pinned just above the Next song button so it is always under the same thumb,
+   whatever the song's notes do. Smaller than Next song, to stay distinct. */
 .gig__pill {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 34px auto 8px;
-  min-height: 50px;
-  padding: 0 26px;
+  margin: 0 auto 12px;
+  min-height: 46px;
+  padding: 0 24px;
   border-radius: 999px;
   background: #ffffff;
   color: #101010;
