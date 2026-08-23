@@ -24,6 +24,7 @@ function cleanSong(raw) {
   return {
     id: str(raw.id, 80) || uid('song'),
     name,
+    artist: str(raw.artist, 200).trim(),
     notes,
     tutorialLinks: list(raw.tutorialLinks)
       .map((link) => ({

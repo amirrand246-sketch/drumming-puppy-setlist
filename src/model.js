@@ -12,6 +12,7 @@ export function newSong(name = '') {
   return {
     id: uid('song'),
     name,
+    artist: '',
     notes: [],
     tutorialLinks: [],
     tags: [],
@@ -76,7 +77,10 @@ export function compareSongs(a, b) {
 export function matchesQuery(song, query) {
   const q = query.trim().toLowerCase()
   if (!q) return true
-  const haystack = [song.name, ...(song.tags || [])].join(' ').toLowerCase()
+  // Artist counts: a song is as often remembered by who played it as by name.
+  const haystack = [song.name, song.artist || '', ...(song.tags || [])]
+    .join(' ')
+    .toLowerCase()
   return q
     .split(/\s+/)
     .every((term) => haystack.includes(term))

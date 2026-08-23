@@ -41,7 +41,7 @@ export function SongPicker({ alreadyIn, onDone, onCancel }) {
       </header>
 
       <div className="searchwrap">
-        <SearchField value={query} onChange={setQuery} placeholder="Search songs and tags" />
+        <SearchField value={query} onChange={setQuery} placeholder="Search songs, artists, tags" />
       </div>
 
       {songs.length === 0 ? (

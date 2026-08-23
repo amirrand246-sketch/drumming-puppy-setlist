@@ -84,7 +84,7 @@ export function SongLibrary() {
         }
       />
       <div className="searchwrap">
-        <SearchField value={query} onChange={setQuery} placeholder="Search songs and tags" />
+        <SearchField value={query} onChange={setQuery} placeholder="Search songs, artists, tags" />
       </div>
 
       {!ready ? null : songs.length === 0 ? (
@@ -133,9 +133,10 @@ export function SongLibrary() {
                       >
                         <span className="row__main">
                           <span className="row__title">{song.name || 'Untitled song'}</span>
-                          {(song.tags?.length > 0 || song.difficulty) && (
+                          {(song.tags?.length > 0 || song.difficulty || song.artist) && (
                             <span className="row__sub">
                               <DifficultyPill value={song.difficulty} />
+                              {song.artist && <span className="row__artist">{song.artist}</span>}
                               {song.tags?.length > 0 && (
                                 <span className="row__tags">{song.tags.join(' · ')}</span>
                               )}

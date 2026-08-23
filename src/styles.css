@@ -1622,3 +1622,35 @@ ul.gig__notes li::before {
   transform: scale(0.97);
   filter: brightness(0.92);
 }
+
+/* Artist: always second to the song name, never competing with it. */
+.field--sub {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.field__input--artist {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.row__artist {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Once an artist is shown, tags step back a shade so the line still ranks. */
+.row__artist + .row__tags {
+  color: var(--faint);
+}
+
+.row__artist + .row__tags::before {
+  content: '· ';
+}

@@ -29,9 +29,16 @@ export function LibraryProvider({ children }) {
         // back so it only ever happens once.
         const stale = []
         const migrated = loadedSongs.map((song) => {
-          if (Array.isArray(song.notes) && Array.isArray(song.imageIds)) return song
+          if (
+            Array.isArray(song.notes) &&
+            Array.isArray(song.imageIds) &&
+            typeof song.artist === 'string'
+          ) {
+            return song
+          }
           const next = {
             ...song,
+            artist: typeof song.artist === 'string' ? song.artist : '',
             notes: toNoteLines(song.notes),
             imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
           }

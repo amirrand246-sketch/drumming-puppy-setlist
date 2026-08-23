@@ -166,7 +166,12 @@ export function SongProfile({ songId, isNew }) {
 
   const goBack = () => {
     // A song added and then abandoned without a name shouldn't clutter the library.
-    if (!song.name.trim() && !hasNotes(song) && song.tags.length === 0) {
+    if (
+      !song.name.trim() &&
+      !(song.artist || '').trim() &&
+      !hasNotes(song) &&
+      song.tags.length === 0
+    ) {
       deleteSong(song.id)
       navigate('/songs', { replace: true })
       return
@@ -199,6 +204,16 @@ export function SongProfile({ songId, isNew }) {
               autoComplete="off"
             />
           </label>
+          <div className="field field--sub">
+            <input
+              className="field__input field__input--artist"
+              value={song.artist || ''}
+              placeholder="Add artist"
+              aria-label="Artist"
+              onChange={(event) => patch({ artist: event.target.value })}
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         <div className="card">
