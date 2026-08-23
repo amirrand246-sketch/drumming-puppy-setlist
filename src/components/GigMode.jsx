@@ -175,6 +175,7 @@ export function GigMode({ setlistId }) {
 
   const song = songs[index]
   const next = songs[index + 1]
+  const previous = songs[index - 1]
   const atEnd = index === songs.length - 1
   const noteLines = toNoteLines(song.notes).filter((line) => line.trim())
 
@@ -298,27 +299,34 @@ export function GigMode({ setlistId }) {
               <Icon name="list" size={18} />
               Set list
             </button>
-            {/* Always rendered, so the footer keeps its height and the pill above
-                it never shifts between songs. */}
-            <p className="gig__next">
-              {next ? `Next: ${next.name || 'Untitled song'}` : 'Last song in the set'}
-            </p>
+            {/* Always rendered, so the footer keeps its height and the Set list
+                pill above it never shifts between songs. Ending early happens
+                more than you would think — a set gets cut short. */}
+            <button type="button" className="gig__finish" onClick={() => setFinished(true)}>
+              Finish set
+            </button>
             <div className="gig__nav">
               <button
                 type="button"
-                className="gig__step"
+                className="gig__step gig__step--nav"
                 onClick={() => go(-1)}
                 disabled={index === 0}
-                aria-label="Previous song"
               >
-                <Icon name="back" size={26} />
+                <span className="gig__navlabel">Previous</span>
+                <span className="gig__navname">
+                  {previous ? previous.name || 'Untitled song' : 'Start of set'}
+                </span>
               </button>
               <button
                 type="button"
-                className="gig__step gig__step--main"
-                onClick={() => (atEnd ? setFinished(true) : go(1))}
+                className="gig__step gig__step--nav"
+                onClick={() => go(1)}
+                disabled={atEnd}
               >
-                {atEnd ? 'Finish set' : 'Next song'}
+                <span className="gig__navlabel">Next</span>
+                <span className="gig__navname">
+                  {next ? next.name || 'Untitled song' : 'End of set'}
+                </span>
               </button>
             </div>
           </>
