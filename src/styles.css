@@ -1341,61 +1341,6 @@ body.gig-open {
   filter: brightness(1.15);
 }
 
-.gig__jump {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  align-items: flex-end;
-}
-
-.gig__jumpscrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  border: 0;
-}
-
-.gig__jumplist {
-  position: relative;
-  width: 100%;
-  max-height: 70vh;
-  overflow-y: auto;
-  margin: 0;
-  padding: 8px 8px calc(env(safe-area-inset-bottom) + 8px);
-  list-style: none;
-  background: #101015;
-  border-top-left-radius: 18px;
-  border-top-right-radius: 18px;
-}
-
-.gig__jumprow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 54px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  color: #e8e8ef;
-  font-size: 17px;
-  text-align: left;
-}
-
-.gig__jumprow--on {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 640;
-}
-
-.gig__jumpnum {
-  flex: none;
-  width: 26px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #6f6f7c;
-  text-align: center;
-}
 
 .btn--gig {
   min-height: 54px;
@@ -1524,4 +1469,89 @@ ul.gig__notes li::before {
   height: 0.32em;
   border-radius: 50%;
   background: var(--accent);
+}
+
+/* ---------- gig mode: whole-set overview ---------- */
+
+.gig__icon--on {
+  background: var(--accent-soft);
+  color: #ffffff;
+}
+
+.gig__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0;
+  padding: 8px 10px 14px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gig__listrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #17171c;
+  color: #e8e8ef;
+  font-size: 18px;
+  text-align: left;
+}
+
+.gig__listrow:active {
+  filter: brightness(1.35);
+}
+
+.gig__listrow--now {
+  background: #ffffff;
+  color: #101010;
+  font-weight: 680;
+}
+
+.gig__listnum {
+  flex: none;
+  width: 26px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #7a7a86;
+  text-align: center;
+}
+
+.gig__listrow--now .gig__listnum {
+  color: #101010;
+}
+
+.gig__listname {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gig__now {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #101010;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gig__step--wide {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

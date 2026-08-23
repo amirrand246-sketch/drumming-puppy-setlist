@@ -53,10 +53,11 @@ export function GigMode({ setlistId }) {
 
   const [index, setIndex] = useState(0)
   const [finished, setFinished] = useState(false)
-  const [jumping, setJumping] = useState(false)
+  const [overview, setOverview] = useState(false)
   const [scale, setScale] = useState(readScale)
   const [swipe, setSwipe] = useState(0)
   const touch = useRef(null)
+  const currentRow = useRef(null)
 
   useWakeLock(songs.length > 0 && !finished)
 
@@ -76,11 +77,19 @@ export function GigMode({ setlistId }) {
     const onKey = (event) => {
       if (event.key === 'ArrowRight') go(1)
       else if (event.key === 'ArrowLeft') go(-1)
-      else if (event.key === 'Escape') back(`/sets/${setlistId}`)
+      else if (event.key === 'Escape') {
+        if (overview) setOverview(false)
+        else back(`/sets/${setlistId}`)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go, setlistId])
+  }, [go, setlistId, overview])
+
+  // Opening the overview on song 14 should show song 14, not the top of the set.
+  useEffect(() => {
+    if (overview) currentRow.current?.scrollIntoView({ block: 'center' })
+  }, [overview])
 
   const changeScale = (delta) => {
     const next = SCALES[Math.min(SCALES.length - 1, Math.max(0, SCALES.indexOf(scale) + delta))]
@@ -183,105 +192,126 @@ export function GigMode({ setlistId }) {
         <button
           type="button"
           className="gig__counter"
-          onClick={() => setJumping(true)}
-          aria-label="Jump to another song"
+          onClick={() => setOverview((open) => !open)}
+          aria-label={overview ? 'Back to the current song' : 'Show the whole set'}
         >
           {index + 1} / {songs.length}
         </button>
         <div className="gig__zoom">
+          {!overview && (
+            <>
+              <button
+                type="button"
+                className="gig__icon"
+                aria-label="Smaller text"
+                disabled={scale === SCALES[0]}
+                onClick={() => changeScale(-1)}
+              >
+                <span className="gig__zoomtext gig__zoomtext--small">A</span>
+              </button>
+              <button
+                type="button"
+                className="gig__icon"
+                aria-label="Bigger text"
+                disabled={scale === SCALES[SCALES.length - 1]}
+                onClick={() => changeScale(1)}
+              >
+                <span className="gig__zoomtext">A</span>
+              </button>
+            </>
+          )}
           <button
             type="button"
-            className="gig__icon"
-            aria-label="Smaller text"
-            disabled={scale === SCALES[0]}
-            onClick={() => changeScale(-1)}
+            className={`gig__icon ${overview ? 'gig__icon--on' : ''}`}
+            aria-pressed={overview}
+            aria-label={overview ? 'Back to the current song' : 'Show the whole set'}
+            onClick={() => setOverview((open) => !open)}
           >
-            <span className="gig__zoomtext gig__zoomtext--small">A</span>
-          </button>
-          <button
-            type="button"
-            className="gig__icon"
-            aria-label="Bigger text"
-            disabled={scale === SCALES[SCALES.length - 1]}
-            onClick={() => changeScale(1)}
-          >
-            <span className="gig__zoomtext">A</span>
+            <Icon name="list" size={22} />
           </button>
         </div>
       </header>
 
-      <div
-        className="gig__stage"
-        style={{ transform: `translateX(${swipe / 4}px)` }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-      >
-        <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
-          {song.name || 'Untitled song'}
-        </h1>
-        {noteLines.length > 0 ? (
-          <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
-            {noteLines.map((line, i) => (
-              // eslint-disable-next-line react/no-array-index-key -- read-only list
-              <li key={i}>{line}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="gig__nonotes">No notes for this one.</p>
-        )}
-      </div>
-
-      <footer className="gig__foot">
-        {next && <p className="gig__next">Next: {next.name || 'Untitled song'}</p>}
-        <div className="gig__nav">
-          <button
-            type="button"
-            className="gig__step"
-            onClick={() => go(-1)}
-            disabled={index === 0}
-            aria-label="Previous song"
-          >
-            <Icon name="back" size={26} />
-          </button>
-          <button
-            type="button"
-            className="gig__step gig__step--main"
-            onClick={() => (atEnd ? setFinished(true) : go(1))}
-          >
-            {atEnd ? 'Finish set' : 'Next song'}
-          </button>
-        </div>
-      </footer>
-
-      {jumping && (
-        <div className="gig__jump" role="dialog" aria-modal="true" aria-label="Jump to a song">
-          <button
-            type="button"
-            className="gig__jumpscrim"
-            aria-label="Close"
-            onClick={() => setJumping(false)}
-          />
-          <ul className="gig__jumplist">
-            {songs.map((item, i) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className={`gig__jumprow ${i === index ? 'gig__jumprow--on' : ''}`}
-                  onClick={() => {
-                    setIndex(i)
-                    setJumping(false)
-                  }}
-                >
-                  <span className="gig__jumpnum">{i + 1}</span>
-                  <span>{item.name || 'Untitled song'}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+      {overview ? (
+        <ul className="gig__list">
+          {songs.map((item, i) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                ref={i === index ? currentRow : null}
+                className={`gig__listrow ${i === index ? 'gig__listrow--now' : ''}`}
+                aria-current={i === index ? 'true' : undefined}
+                onClick={() => {
+                  setIndex(i)
+                  setOverview(false)
+                }}
+              >
+                <span className="gig__listnum">{i + 1}</span>
+                <span className="gig__listname">{item.name || 'Untitled song'}</span>
+                {i === index && <span className="gig__now">Now</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div
+          className="gig__stage"
+          style={{ transform: `translateX(${swipe / 4}px)` }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
+            {song.name || 'Untitled song'}
+          </h1>
+          {noteLines.length > 0 ? (
+            <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
+              {noteLines.map((line, i) => (
+                // eslint-disable-next-line react/no-array-index-key -- read-only list
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="gig__nonotes">No notes for this one.</p>
+          )}
         </div>
       )}
+
+      <footer className="gig__foot">
+        {overview ? (
+          <button
+            type="button"
+            className="gig__step gig__step--main gig__step--wide"
+            onClick={() => setOverview(false)}
+          >
+            Back to {song.name || 'the current song'}
+          </button>
+        ) : (
+          <>
+            {next && <p className="gig__next">Next: {next.name || 'Untitled song'}</p>}
+            <div className="gig__nav">
+              <button
+                type="button"
+                className="gig__step"
+                onClick={() => go(-1)}
+                disabled={index === 0}
+                aria-label="Previous song"
+              >
+                <Icon name="back" size={26} />
+              </button>
+              <button
+                type="button"
+                className="gig__step gig__step--main"
+                onClick={() => (atEnd ? setFinished(true) : go(1))}
+              >
+                {atEnd ? 'Finish set' : 'Next song'}
+              </button>
+            </div>
+          </>
+        )}
+      </footer>
+
     </div>
   )
 }
