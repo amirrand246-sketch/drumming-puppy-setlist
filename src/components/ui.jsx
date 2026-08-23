@@ -124,10 +124,13 @@ export function PromptDialog({
   initialValue = '',
   placeholder = '',
   confirmLabel = 'Save',
+  help,
+  validate,
   onConfirm,
   onCancel,
 }) {
   const [value, setValue] = useState(initialValue)
+  const [error, setError] = useState('')
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -142,6 +145,11 @@ export function PromptDialog({
     event.preventDefault()
     const trimmed = value.trim()
     if (!trimmed) return
+    const problem = validate ? validate(trimmed) : ''
+    if (problem) {
+      setError(problem)
+      return
+    }
     onConfirm(trimmed)
   }
 
@@ -160,9 +168,19 @@ export function PromptDialog({
           className="modal__input"
           value={value}
           placeholder={placeholder}
-          onChange={(event) => setValue(event.target.value)}
+          onChange={(event) => {
+            setValue(event.target.value)
+            if (error) setError('')
+          }}
           autoComplete="off"
+          autoCapitalize="none"
+          spellCheck="false"
         />
+        {error ? (
+          <p className="modal__error">{error}</p>
+        ) : (
+          help && <p className="modal__help">{help}</p>
+        )}
         <div className="modal__actions">
           <button type="button" className="btn btn--ghost" onClick={onCancel}>
             Cancel

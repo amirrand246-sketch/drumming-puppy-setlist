@@ -3,6 +3,7 @@
  * Anything coming back in is treated as untrusted: every record is rebuilt field
  * by field, so a truncated or hand-edited file can't corrupt the library.
  */
+import { isAppleMusicUrl } from './appleMusic.js'
 import { DIFFICULTIES, toNoteLines, uid } from './model.js'
 
 export const BACKUP_APP = 'drumming-puppys-setlist'
@@ -25,6 +26,9 @@ function cleanSong(raw) {
     id: str(raw.id, 80) || uid('song'),
     name,
     artist: str(raw.artist, 200).trim(),
+    // A link only survives the round trip if it still looks like Apple Music.
+    appleMusicUrl: isAppleMusicUrl(str(raw.appleMusicUrl, 2000)) ? str(raw.appleMusicUrl, 2000).trim() : '',
+    appleMusicSource: ['auto', 'manual'].includes(raw.appleMusicSource) ? raw.appleMusicSource : '',
     notes,
     tutorialLinks: list(raw.tutorialLinks)
       .map((link) => ({

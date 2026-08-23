@@ -32,13 +32,18 @@ export function LibraryProvider({ children }) {
           if (
             Array.isArray(song.notes) &&
             Array.isArray(song.imageIds) &&
-            typeof song.artist === 'string'
+            typeof song.artist === 'string' &&
+            typeof song.appleMusicUrl === 'string'
           ) {
             return song
           }
           const next = {
             ...song,
             artist: typeof song.artist === 'string' ? song.artist : '',
+            appleMusicUrl:
+              typeof song.appleMusicUrl === 'string' ? song.appleMusicUrl : '',
+            appleMusicSource:
+              typeof song.appleMusicSource === 'string' ? song.appleMusicSource : '',
             notes: toNoteLines(song.notes),
             imageIds: Array.isArray(song.imageIds) ? song.imageIds : [],
           }

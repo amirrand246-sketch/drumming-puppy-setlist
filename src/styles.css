@@ -583,6 +583,7 @@ a {
 /* ---------- buttons ---------- */
 
 .btn {
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1653,4 +1654,53 @@ ul.gig__notes li::before {
 
 .row__artist + .row__tags::before {
   content: '· ';
+}
+
+/* ---------- Apple Music ---------- */
+
+.apple {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 0 12px;
+}
+
+.apple__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.apple__status {
+  margin: 0 2px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.apple__status--warn {
+  color: var(--text);
+}
+
+.linklike {
+  align-self: flex-start;
+  padding: 6px 2px;
+  font-size: 13px;
+  font-weight: 560;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.modal__help {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.modal__error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 560;
+  color: var(--danger);
 }

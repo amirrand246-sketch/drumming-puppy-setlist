@@ -13,6 +13,8 @@ export function newSong(name = '') {
     id: uid('song'),
     name,
     artist: '',
+    appleMusicUrl: '',
+    appleMusicSource: '',
     notes: [],
     tutorialLinks: [],
     tags: [],

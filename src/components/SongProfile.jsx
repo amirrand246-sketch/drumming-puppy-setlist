@@ -5,6 +5,7 @@ import { DIFFICULTIES, formatDate, hasNotes, toNoteLines, todayISO, uid } from '
 import { ConfirmDialog, Icon, TopBar } from './ui.jsx'
 import { prepareImage } from '../ocr.js'
 import { NotesList } from './NotesList.jsx'
+import { AppleMusicLink } from './AppleMusicLink.jsx'
 
 function normaliseUrl(url) {
   const trimmed = url.trim()
@@ -214,6 +215,7 @@ export function SongProfile({ songId, isNew }) {
               autoComplete="off"
             />
           </div>
+          <AppleMusicLink song={song} patch={patch} />
         </div>
 
         <div className="card">
