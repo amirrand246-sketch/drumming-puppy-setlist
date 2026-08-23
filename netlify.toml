@@ -18,3 +18,10 @@
   for = "/manifest.webmanifest"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# Icon filenames never change, so without this a CDN or browser copy can keep
+# serving the previous artwork after the logo is replaced.
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
