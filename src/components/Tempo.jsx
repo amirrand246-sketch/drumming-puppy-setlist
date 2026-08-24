@@ -270,7 +270,7 @@ export function TempoRow({ song, patch }) {
         <MetronomeButton
           bpm={song.bpm}
           adjustable
-          label={song.bpm ? describe(song) : 'Metronome'}
+          label="Metronome"
           onTempoChange={(next) =>
             patch({
               bpm: next,

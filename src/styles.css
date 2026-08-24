@@ -1531,7 +1531,7 @@ ul.gig__notes li::before {
 .metro {
   display: inline-flex;
   align-items: stretch;
-  min-height: 44px;
+  min-height: 52px;
   border: 1px solid var(--sep);
   border-radius: 999px;
   background: var(--card);
@@ -1547,6 +1547,7 @@ ul.gig__notes li::before {
   align-items: center;
   gap: 8px;
   padding: 0 14px;
+  white-space: nowrap;
   color: inherit;
   font: inherit;
   font-variant-numeric: tabular-nums;
@@ -1556,7 +1557,7 @@ ul.gig__notes li::before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
+  width: 46px;
   color: var(--muted);
   touch-action: none;
 }
@@ -1632,9 +1633,9 @@ ul.gig__notes li::before {
 .tempo__entry {
   display: inline-flex;
   align-items: baseline;
-  gap: 5px;
-  padding: 0 12px;
-  height: 44px;
+  gap: 6px;
+  padding: 0 16px;
+  height: 52px;
   border: 1px solid var(--sep);
   border-radius: 999px;
   background: var(--bg);
@@ -1645,14 +1646,16 @@ ul.gig__notes li::before {
 }
 
 .tempo__input {
-  width: 3.6ch;
+  /* Wide enough for three digits at this size, with room for the caret. */
+  width: 3.4em;
   border: 0;
   background: none;
   outline: none;
-  font-size: 16px;
-  font-weight: 660;
+  font-size: 20px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  letter-spacing: 0.01em;
+  text-align: center;
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -1664,7 +1667,7 @@ ul.gig__notes li::before {
 }
 
 .tempo__unit {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--muted);
