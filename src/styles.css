@@ -1530,10 +1530,8 @@ ul.gig__notes li::before {
 
 .metro {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
   min-height: 44px;
-  padding: 0 14px;
   border: 1px solid var(--sep);
   border-radius: 999px;
   background: var(--card);
@@ -1541,6 +1539,35 @@ ul.gig__notes li::before {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+  overflow: hidden;
+}
+
+.metro__play {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.metro__nudge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  color: var(--muted);
+  touch-action: none;
+}
+
+.metro__nudge:active {
+  background: var(--accent-soft);
+}
+
+.metro--on .metro__nudge {
+  color: inherit;
+  opacity: 0.75;
 }
 
 .metro--on {
@@ -1566,12 +1593,20 @@ ul.gig__notes li::before {
 /* Gig mode keeps it quiet: it sits under the title, out of the way. */
 .metro--gig {
   margin: 0 0 18px;
-  min-height: 38px;
-  padding: 0 12px;
+  min-height: 40px;
   background: #17171c;
   border-color: #2b2b33;
   color: #d8d8e0;
   font-size: 13px;
+}
+
+.metro--gig .metro__play {
+  padding: 0 10px;
+}
+
+.metro--gig .metro__nudge {
+  width: 40px;
+  color: #8a8a96;
 }
 
 .metro--gig.metro--on {

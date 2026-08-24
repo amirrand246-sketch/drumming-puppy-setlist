@@ -38,8 +38,10 @@ and works offline after the first load.
 - **Tempo and metronome** — type a BPM on any song, or let a song with an Apple
   Music link look one up through GetSongBPM, cross-checked against the linked
   track's album and duration so a live take or remix cannot supply the wrong
-  number. A typed tempo always wins and is never overwritten. A Web Audio
-  metronome plays it on the profile and in gig mode, offline.
+  number. A typed tempo always wins and is never overwritten. The Web Audio
+  metronome is on every song profile and in gig mode whether or not a tempo was
+  ever found — with none stored it starts at 100 and −/+ (hold to run) find the
+  right one, saving it to the song. Works offline.
 
 - **Backup & restore** — export the library to a JSON file you keep somewhere
   else, and restore it on a new phone or after a wipe. Restoring merges (adds

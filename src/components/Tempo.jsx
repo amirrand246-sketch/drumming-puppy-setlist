@@ -10,12 +10,26 @@ import {
 } from '../tempo.js'
 import { Icon } from './ui.jsx'
 
-/** Shared metronome control: a play/pause button with a beat light. */
-export function MetronomeButton({ bpm, label, className = '' }) {
+/**
+ * Shared metronome control: play/pause with a beat light, and optional −/+ so a
+ * tempo can be found without leaving the screen. Holding a nudge repeats.
+ *
+ * Every song can click, whether or not a tempo was ever looked up: with none
+ * stored it starts from a sensible default, and whatever you set is saved to
+ * the song so it is there next time.
+ */
+export const DEFAULT_BPM = 100
+
+export function MetronomeButton({ bpm, label, className = '', onTempoChange, adjustable = false }) {
   const [running, setRunning] = useState(false)
   const [pulse, setPulse] = useState(false)
+  const [working, setWorking] = useState(() => bpm || DEFAULT_BPM)
+  // Mirrors `working` synchronously: saving a tempo bounces straight back as a
+  // prop, and without this the effect below would stop the click we just began.
+  const workingRef = useRef(bpm || DEFAULT_BPM)
   const engine = useRef(null)
   const flash = useRef(null)
+  const hold = useRef(null)
 
   useEffect(() => {
     engine.current = createMetronome({
@@ -27,14 +41,20 @@ export function MetronomeButton({ bpm, label, className = '' }) {
     })
     return () => {
       clearTimeout(flash.current)
+      clearTimeout(hold.current)
       engine.current?.close()
     }
   }, [])
 
-  // A changed tempo — or a changed song — should never keep clicking the old one.
+  // A tempo that genuinely changed underneath us — a different song, a lookup
+  // landing — stops the click. Our own saves are not that.
   useEffect(() => {
+    const next = bpm || DEFAULT_BPM
+    if (next === workingRef.current) return
     engine.current?.stop()
     setRunning(false)
+    workingRef.current = next
+    setWorking(next)
   }, [bpm])
 
   const toggle = async () => {
@@ -43,25 +63,74 @@ export function MetronomeButton({ bpm, label, className = '' }) {
       setRunning(false)
       return
     }
-    const started = await engine.current.start(bpm)
+    const started = await engine.current.start(workingRef.current)
     setRunning(Boolean(started))
+    // Starting from the default is a decision about this song; keep it.
+    if (started && !bpm && onTempoChange) onTempoChange(workingRef.current)
   }
 
-  if (!bpm) return null
+  const step = (delta) => {
+    setWorking((current) => {
+      const next = Math.min(400, Math.max(20, current + delta))
+      if (next === current) return current
+      workingRef.current = next
+      if (onTempoChange) onTempoChange(next)
+      if (running) {
+        engine.current.stop()
+        engine.current.start(next)
+      }
+      return next
+    })
+  }
+
+  const startHold = (delta) => {
+    step(delta)
+    let wait = 420
+    const tick = () => {
+      step(delta)
+      wait = Math.max(60, wait - 60)
+      hold.current = setTimeout(tick, wait)
+    }
+    hold.current = setTimeout(tick, wait)
+  }
+
+  const endHold = () => clearTimeout(hold.current)
+
+  const nudge = (delta, name) => ({
+    type: 'button',
+    className: 'metro__nudge',
+    'aria-label': name,
+    onPointerDown: () => startHold(delta),
+    onPointerUp: endHold,
+    onPointerLeave: endHold,
+    onPointerCancel: endHold,
+  })
 
   return (
-    <button
-      type="button"
-      className={`metro ${running ? 'metro--on' : ''} ${className}`}
-      onClick={toggle}
-      aria-pressed={running}
-      aria-label={running ? 'Stop the metronome' : `Start the metronome at ${bpm} BPM`}
-      data-testid="metronome"
-    >
-      <Icon name={running ? 'pause' : 'play'} size={16} />
-      <span>{label}</span>
-      <span className={`metro__beat ${pulse ? 'metro__beat--hit' : ''}`} aria-hidden="true" />
-    </button>
+    <span className={`metro ${running ? 'metro--on' : ''} ${className}`}>
+      {adjustable && (
+        <button {...nudge(-1, 'Slower')}>
+          <Icon name="minus" size={15} />
+        </button>
+      )}
+      <button
+        type="button"
+        className="metro__play"
+        onClick={toggle}
+        aria-pressed={running}
+        aria-label={running ? 'Stop the metronome' : `Start the metronome at ${working} BPM`}
+        data-testid="metronome"
+      >
+        <Icon name={running ? 'pause' : 'play'} size={16} />
+        <span>{label ?? `${working} BPM`}</span>
+        <span className={`metro__beat ${pulse ? 'metro__beat--hit' : ''}`} aria-hidden="true" />
+      </button>
+      {adjustable && (
+        <button {...nudge(1, 'Faster')}>
+          <Icon name="plus" size={15} />
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -185,7 +254,18 @@ export function TempoRow({ song, patch }) {
           <span className="tempo__unit">BPM</span>
         </label>
 
-        {song.bpm ? <MetronomeButton bpm={song.bpm} label="Metronome" /> : null}
+        <MetronomeButton
+          bpm={song.bpm}
+          adjustable
+          label={song.bpm ? describe(song) : 'Metronome'}
+          onTempoChange={(next) =>
+            patch({
+              bpm: next,
+              tempoConfidence: TEMPO_MANUAL,
+              tempoCheckedUrl: song.appleMusicUrl || '',
+            })
+          }
+        />
 
         {song.bpm && song.tempoConfidence === TEMPO_UNCONFIRMED && (
           <span className="tempo__flag" title="Could not be checked against the linked track">

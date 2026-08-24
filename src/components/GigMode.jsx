@@ -269,18 +269,20 @@ export function GigMode({ setlistId }) {
           <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
             {song.name || 'Untitled song'}
           </h1>
-          {song.bpm && (
-            <MetronomeButton
-              key={song.id}
-              bpm={song.bpm}
-              className="metro--gig"
-              label={
-                song.tempoConfidence === 'unconfirmed'
-                  ? `${song.bpm} BPM · unconfirmed`
-                  : `${song.bpm} BPM`
-              }
-            />
-          )}
+          <MetronomeButton
+            key={song.id}
+            bpm={song.bpm}
+            adjustable
+            className="metro--gig"
+            label={
+              song.bpm && song.tempoConfidence === 'unconfirmed'
+                ? `${song.bpm} BPM · unconfirmed`
+                : undefined
+            }
+            onTempoChange={(next) =>
+              updateSong(song.id, { bpm: next, tempoConfidence: 'manual' })
+            }
+          />
           {noteLines.length > 0 ? (
             <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
               {noteLines.map((line, i) => (
