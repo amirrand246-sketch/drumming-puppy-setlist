@@ -150,6 +150,9 @@ function cleanBpm(value) {
 /** Tempo row on the song profile: looks the tempo up once, then just plays it. */
 export function TempoRow({ song, patch }) {
   const [state, setState] = useState('')
+  // Held while the field has focus: clamping every keystroke turns "96" into
+  // "206", because the first digit is below the minimum and gets rewritten.
+  const [draft, setDraft] = useState(null)
   const [online, setOnline] = useState(() => navigator.onLine !== false)
   const running = useRef(false)
 
@@ -220,6 +223,19 @@ export function TempoRow({ song, patch }) {
 
   const manual = song.tempoConfidence === TEMPO_MANUAL
 
+  /** Only when the field is left: a half-typed tempo is not a tempo yet. */
+  const commitDraft = () => {
+    if (draft === null) return
+    const bpm = cleanBpm(draft)
+    setDraft(null)
+    if ((bpm ?? null) === (song.bpm ?? null)) return
+    patch({
+      bpm,
+      tempoConfidence: bpm ? TEMPO_MANUAL : '',
+      tempoCheckedUrl: bpm ? song.appleMusicUrl || '' : '',
+    })
+  }
+
   let hint = ''
   if (state === 'looking') hint = 'Looking up the tempo…'
   else if (state === 'failed') hint = "Couldn't reach the tempo service"
@@ -233,22 +249,19 @@ export function TempoRow({ song, patch }) {
         <label className="tempo__entry">
           <input
             className="tempo__input"
-            type="number"
+            type="text"
             inputMode="numeric"
-            min="20"
-            max="400"
-            step="1"
-            value={song.bpm ?? ''}
+            pattern="[0-9]*"
+            maxLength={3}
+            value={draft ?? (song.bpm ?? '')}
             placeholder="—"
             aria-label="Beats per minute"
             data-testid="bpm-input"
-            onChange={(event) => {
-              const bpm = cleanBpm(event.target.value)
-              patch({
-                bpm,
-                tempoConfidence: bpm ? TEMPO_MANUAL : '',
-                tempoCheckedUrl: bpm ? song.appleMusicUrl || '' : '',
-              })
+            onFocus={() => setDraft(song.bpm ? String(song.bpm) : '')}
+            onChange={(event) => setDraft(event.target.value.replace(/[^0-9]/g, '').slice(0, 3))}
+            onBlur={commitDraft}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur()
             }}
           />
           <span className="tempo__unit">BPM</span>
