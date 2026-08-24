@@ -1586,3 +1586,51 @@ ul.gig__notes li::before {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+.tempo__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tempo__entry {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 0 12px;
+  height: 44px;
+  border: 1px solid var(--sep);
+  border-radius: 999px;
+  background: var(--bg);
+}
+
+.tempo__entry:focus-within {
+  border-color: var(--accent);
+}
+
+.tempo__input {
+  width: 3.6ch;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: 16px;
+  font-weight: 660;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.tempo__input::-webkit-outer-spin-button,
+.tempo__input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tempo__unit {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}

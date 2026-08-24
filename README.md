@@ -35,16 +35,18 @@ and works offline after the first load.
   move through the set, tap the counter to jump, A−/A+ resizes the notes, and the
   screen is kept awake. Tutorial links are deliberately not shown here — playing
   notes only. Finishing offers to stamp every song as played today.
-- **Tempo and metronome** — songs with an Apple Music link get their tempo looked
-  up once through GetSongBPM, cross-checked against the linked track's album and
-  duration so a live take or remix cannot supply the wrong number. A Web Audio
-  metronome plays that tempo on the profile and in gig mode, offline.
+- **Tempo and metronome** — type a BPM on any song, or let a song with an Apple
+  Music link look one up through GetSongBPM, cross-checked against the linked
+  track's album and duration so a live take or remix cannot supply the wrong
+  number. A typed tempo always wins and is never overwritten. A Web Audio
+  metronome plays it on the profile and in gig mode, offline.
 
-- **Backup & restore** — export the whole library (songs, setlists, screenshots)
-  to a JSON file you keep somewhere else, and restore it on a new phone or after
-  a wipe. Restoring either merges (adds what's missing, leaves what's there) or
-  replaces everything. Imported files are rebuilt field by field, so a truncated
-  or hand-edited file can't corrupt the library.
+- **Backup & restore** — export the library to a JSON file you keep somewhere
+  else, and restore it on a new phone or after a wipe. Restoring merges (adds
+  what's missing), updates (writes changed fields onto songs already here,
+  matched on name and artist — the way to fill in tempos in bulk), or replaces
+  everything. Imported files are rebuilt field by field, so a truncated or
+  hand-edited file can't corrupt the library.
 
 ## Storage
 
@@ -55,6 +57,14 @@ Version 3 drops the old `images` store that held song screenshots.
 Data survives app close, reopen and phone restarts. Nothing is synced, so the
 export file under **Backup & restore** is the only copy that outlives the
 device — deleting the site's data or the app deletes everything else.
+
+## Filling in tempos in bulk
+
+Export from **Backup & restore**, set `bpm` on the songs in that JSON however
+you like — by hand, a spreadsheet, an assistant — then bring the file back and
+choose **Update songs I already have**. Songs match on id, falling back to name
+plus artist, and only fields with a value in the file are written, so blanks
+never wipe what is already there.
 
 ## Tempo lookups
 

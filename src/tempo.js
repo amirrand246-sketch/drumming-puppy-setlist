@@ -14,6 +14,7 @@ const DURATION_TOLERANCE_SECONDS = 5
 export const TEMPO_CONFIRMED = 'confirmed'
 export const TEMPO_UNCONFIRMED = 'unconfirmed'
 export const TEMPO_UNAVAILABLE = 'unavailable'
+export const TEMPO_MANUAL = 'manual'
 
 export function hasTempoKey() {
   return Boolean(import.meta.env.VITE_GETSONGBPM_KEY)

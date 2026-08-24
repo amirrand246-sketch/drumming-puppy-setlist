@@ -41,7 +41,7 @@ function cleanSong(raw) {
           }
         : null,
     bpm: Number.isFinite(Number(raw.bpm)) && Number(raw.bpm) > 0 ? Math.round(Number(raw.bpm)) : null,
-    tempoConfidence: ['confirmed', 'unconfirmed', 'unavailable'].includes(raw.tempoConfidence)
+    tempoConfidence: ['confirmed', 'unconfirmed', 'unavailable', 'manual'].includes(raw.tempoConfidence)
       ? raw.tempoConfidence
       : '',
     tempoCheckedUrl: str(raw.tempoCheckedUrl, 2000),

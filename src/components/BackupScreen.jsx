@@ -177,6 +177,14 @@ export function BackupScreen() {
                 </button>
                 <button
                   type="button"
+                  className="btn btn--block"
+                  onClick={() => runImport('update')}
+                  data-testid="update-existing"
+                >
+                  Update songs I already have
+                </button>
+                <button
+                  type="button"
                   className="btn btn--danger btn--block"
                   onClick={() => setConfirmReplace(true)}
                 >
@@ -184,21 +192,29 @@ export function BackupScreen() {
                 </button>
                 <p className="field__hint">
                   Merging adds anything missing and leaves songs you already have alone.
+                  Updating writes changed fields — a tempo you filled in elsewhere, say —
+                  onto songs already here, matching on name and artist. Blank fields in the
+                  file are left alone rather than wiping what you have.
                 </p>
               </div>
             )}
 
             {result && (
               <p className="backup__result">
-                {result.mode === 'replace'
-                  ? `Library replaced: ${plural(result.songs, 'song')}, ${plural(
-                      result.setlists,
-                      'setlist',
-                    )}.`
-                  : `Added ${plural(result.songs, 'song')} and ${plural(
-                      result.setlists,
-                      'setlist',
-                    )}${result.skipped > 0 ? `, skipped ${result.skipped} already here` : ''}.`}
+                {result.mode === 'replace' &&
+                  `Library replaced: ${plural(result.songs, 'song')}, ${plural(
+                    result.setlists,
+                    'setlist',
+                  )}.`}
+                {result.mode === 'update' &&
+                  `Updated ${plural(result.songs, 'song')}${
+                    result.skipped > 0 ? `, ${result.skipped} already matched` : ''
+                  }${result.missing > 0 ? `, ${result.missing} not in your library` : ''}.`}
+                {result.mode === 'merge' &&
+                  `Added ${plural(result.songs, 'song')} and ${plural(
+                    result.setlists,
+                    'setlist',
+                  )}${result.skipped > 0 ? `, skipped ${result.skipped} already here` : ''}.`}
               </p>
             )}
 

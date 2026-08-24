@@ -238,6 +238,64 @@ export function LibraryProvider({ children }) {
         return { songs: backup.songs.length, setlists: backup.setlists.length, skipped: 0 }
       }
 
+      if (mode === 'update') {
+        // Round-trip workflow: export, fill in tempos (or anything else)
+        // elsewhere, bring the file back. Matches on id, then name + artist.
+        const byId = new Map(songs.map((song) => [song.id, song]))
+        const byName = new Map(
+          songs.map((song) => [
+            `${song.name.trim().toLowerCase()}|${(song.artist || '').trim().toLowerCase()}`,
+            song,
+          ]),
+        )
+        const FIELDS = [
+          'artist',
+          'bpm',
+          'tempoConfidence',
+          'notes',
+          'tags',
+          'difficulty',
+          'lastPlayed',
+          'tutorialLinks',
+          'appleMusicUrl',
+        ]
+        const touched = []
+        let missing = 0
+
+        for (const incoming of backup.songs) {
+          const key = `${incoming.name.trim().toLowerCase()}|${(incoming.artist || '').trim().toLowerCase()}`
+          const current = byId.get(incoming.id) || byName.get(key)
+          if (!current) {
+            missing += 1
+            continue
+          }
+          const changes = {}
+          for (const field of FIELDS) {
+            const value = incoming[field]
+            // Blank fields in the file mean "no opinion", never "delete this".
+            const empty =
+              value === null ||
+              value === undefined ||
+              value === '' ||
+              (Array.isArray(value) && value.length === 0)
+            if (empty) continue
+            if (JSON.stringify(value) === JSON.stringify(current[field])) continue
+            changes[field] = value
+          }
+          if (Object.keys(changes).length > 0) touched.push({ ...current, ...changes })
+        }
+
+        for (const song of touched) await storage.put('songs', song)
+        const updated = new Map(touched.map((song) => [song.id, song]))
+        setSongs((prev) => prev.map((song) => updated.get(song.id) || song))
+        return {
+          songs: touched.length,
+          setlists: 0,
+          skipped: backup.songs.length - touched.length - missing,
+          missing,
+        }
+      }
+
       const existingIds = new Set(songs.map((song) => song.id))
       const existingNames = new Set(songs.map((song) => song.name.trim().toLowerCase()))
       const newSongs = backup.songs.filter(
