@@ -1733,3 +1733,102 @@ ul.gig__notes li::before {
   color: #8a8a96;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- breaks and sets ---------- */
+
+.setrow--break {
+  background: var(--bg);
+  border: 1px dashed var(--sep);
+}
+
+.setrow--break .row__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.setrow__set {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+}
+
+.breakstep {
+  display: flex;
+  gap: 0;
+}
+
+.breakstep .iconbtn {
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.gig__setmark {
+  margin: 14px 0 6px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #8a8a96;
+}
+
+.gig__listrow--break {
+  background: transparent;
+  border: 1px dashed #2e2e38;
+  color: #9a9aa6;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 52px;
+}
+
+.gigbreak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.gigbreak__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8a8a96;
+}
+
+.gigbreak__clock {
+  margin: 0;
+  font-size: 76px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.gigbreak__clock--done {
+  color: var(--accent);
+}
+
+.gigbreak__back {
+  margin: 4px 0 0;
+  font-size: 17px;
+  color: #c9c9d4;
+}
+
+.gigbreak__next {
+  margin: 18px 0 0;
+  max-width: 26ch;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #8a8a96;
+}

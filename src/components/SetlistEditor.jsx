@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { copyName, describeSetLength, relativeDate, setLength } from '../model.js'
+import {
+  DEFAULT_BREAK_MINUTES,
+  breakMinutes,
+  breakTotal,
+  buildRunOrder,
+  copyName,
+  describeSetLength,
+  isBreakEntry,
+  makeBreak,
+  relativeDate,
+  setLength,
+} from '../model.js'
 import { ConfirmDialog, EmptyState, Icon, PromptDialog, TopBar } from './ui.jsx'
 import { ReorderList } from './ReorderList.jsx'
 import { SongPicker } from './SongPicker.jsx'
@@ -38,7 +49,9 @@ export function SetlistEditor({ setlistId }) {
     )
   }
 
-  const songs = set.songIds.map((id) => songsById.get(id)).filter(Boolean)
+  const order = buildRunOrder(set.songIds, songsById)
+  const songs = order.songs.map((item) => item.song)
+  const breakTotalMinutes = breakTotal(set.songIds)
   const isUntitled = set.name === DEFAULT_NAME
 
   const goBack = () => {
@@ -60,6 +73,14 @@ export function SetlistEditor({ setlistId }) {
 
   const removeAt = (index) =>
     updateSetlist(set.id, { songIds: set.songIds.filter((_, i) => i !== index) })
+
+  const addBreak = () =>
+    updateSetlist(set.id, { songIds: [...set.songIds, makeBreak(DEFAULT_BREAK_MINUTES)] })
+
+  const setBreakMinutes = (index, minutes) =>
+    updateSetlist(set.id, {
+      songIds: set.songIds.map((entry, i) => (i === index ? makeBreak(minutes) : entry)),
+    })
 
   const addSongs = (ids) => {
     const additions = ids.filter((id) => !set.songIds.includes(id))
@@ -100,8 +121,10 @@ export function SetlistEditor({ setlistId }) {
             <Icon name="pencil" size={16} />
           </button>
           <p className="setmeta__sub">
+            {order.setCount > 1 ? `${order.setCount} sets · ` : ''}
             {songs.length} {songs.length === 1 ? 'song' : 'songs'}
-            {describeSetLength(songs) ? ` · ${describeSetLength(songs)}` : ''} · updated{' '}
+            {describeSetLength(songs) ? ` · ${describeSetLength(songs)}` : ''}
+            {breakTotalMinutes > 0 ? ` · ${breakTotalMinutes} min breaks` : ''} · updated{' '}
             {relativeDate(set.updatedAt)}
           </p>
           {songs.length > 0 && setLength(songs).timed < songs.length && (
@@ -149,35 +172,88 @@ export function SetlistEditor({ setlistId }) {
           />
         ) : (
           <ReorderList
-            items={songs}
-            getKey={(song) => song.id}
+            items={set.songIds}
+            getKey={(entry, index) => `${entry}-${index}`}
             onReorder={reorder}
-            renderItem={(song, { index, handleProps }) => (
-              <div className="setrow">
-                <span className="setrow__num">{index + 1}</span>
-                <button
-                  type="button"
-                  className="setrow__main"
-                  onClick={() => navigate(`/songs/${song.id}`)}
-                >
-                  <span className="row__title">{song.name || 'Untitled song'}</span>
-                  {song.tags?.length > 0 && (
-                    <span className="row__tags">{song.tags.join(' · ')}</span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className="iconbtn iconbtn--danger"
-                  aria-label={`Remove ${song.name || 'song'} from setlist`}
-                  onClick={() => removeAt(index)}
-                >
-                  <Icon name="minus" size={19} />
-                </button>
-                <span {...handleProps}>
-                  <Icon name="grip" size={22} />
-                </span>
-              </div>
-            )}
+            renderItem={(entry, { index, handleProps }) => {
+              if (isBreakEntry(entry)) {
+                const minutes = breakMinutes(entry)
+                const nextSet = order.items.find((item) => item.index === index)?.setNumber
+                return (
+                  <div className="setrow setrow--break">
+                    <span className="setrow__num">—</span>
+                    <div className="setrow__main">
+                      <span className="row__title">Break · {minutes} min</span>
+                      <span className="row__tags">Set {nextSet} starts after this</span>
+                    </div>
+                    <div className="breakstep">
+                      <button
+                        type="button"
+                        className="iconbtn"
+                        aria-label="Shorter break"
+                        onClick={() => setBreakMinutes(index, minutes - 5)}
+                      >
+                        <Icon name="minus" size={17} />
+                      </button>
+                      <button
+                        type="button"
+                        className="iconbtn"
+                        aria-label="Longer break"
+                        onClick={() => setBreakMinutes(index, minutes + 5)}
+                      >
+                        <Icon name="plus" size={17} />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="iconbtn iconbtn--danger"
+                      aria-label="Remove this break"
+                      onClick={() => removeAt(index)}
+                    >
+                      <Icon name="close" size={18} />
+                    </button>
+                    <span {...handleProps}>
+                      <Icon name="grip" size={22} />
+                    </span>
+                  </div>
+                )
+              }
+
+              const item = order.items.find((candidate) => candidate.index === index)
+              const song = item?.song || songsById.get(entry)
+              if (!song) return null
+              return (
+                <div className="setrow">
+                  <span className="setrow__num">
+                    {order.setCount > 1 && item?.startsSet && (
+                      <span className="setrow__set">SET {item.setNumber}</span>
+                    )}
+                    {item?.positionInSet ?? index + 1}
+                  </span>
+                  <button
+                    type="button"
+                    className="setrow__main"
+                    onClick={() => navigate(`/songs/${song.id}`)}
+                  >
+                    <span className="row__title">{song.name || 'Untitled song'}</span>
+                    {song.tags?.length > 0 && (
+                      <span className="row__tags">{song.tags.join(' · ')}</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="iconbtn iconbtn--danger"
+                    aria-label={`Remove ${song.name || 'song'} from setlist`}
+                    onClick={() => removeAt(index)}
+                  >
+                    <Icon name="minus" size={19} />
+                  </button>
+                  <span {...handleProps}>
+                    <Icon name="grip" size={22} />
+                  </span>
+                </div>
+              )
+            }}
           />
         )}
 
@@ -188,6 +264,14 @@ export function SetlistEditor({ setlistId }) {
             onClick={() => setDialog({ type: 'pick' })}
           >
             <Icon name="plus" size={18} /> Add songs
+          </button>
+          <button
+            type="button"
+            className="btn btn--block"
+            onClick={addBreak}
+            data-testid="add-break"
+          >
+            <Icon name="pause" size={18} /> Add a break
           </button>
           <button
             type="button"

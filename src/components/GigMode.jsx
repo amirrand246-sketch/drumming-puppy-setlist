@@ -3,6 +3,8 @@ import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
 import {
   beatsPerBar,
+  breakTotal,
+  buildRunOrder,
   countInBody,
   describeSetLength,
   isCompound,
@@ -56,10 +58,42 @@ function useWakeLock(active) {
   }, [active])
 }
 
+/** What the phone shows between sets: how long is left, and what opens the next one. */
+function BreakScreen({ minutes, setNumber, nextSong }) {
+  const [endsAt] = useState(() => Date.now() + minutes * 60 * 1000)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const left = Math.max(0, Math.round((endsAt - now) / 1000))
+  const clock = new Date(endsAt).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+  return (
+    <div className="gigbreak">
+      <p className="gigbreak__label">Break</p>
+      <p className={`gigbreak__clock ${left === 0 ? 'gigbreak__clock--done' : ''}`}>
+        {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
+      </p>
+      <p className="gigbreak__back">{left === 0 ? 'Time to go' : `Back at ${clock}`}</p>
+      <p className="gigbreak__next">
+        Set {setNumber} opens with {nextSong ? nextSong.name || 'Untitled song' : 'nothing yet'}
+      </p>
+    </div>
+  )
+}
+
 export function GigMode({ setlistId }) {
   const { setlists, songsById, updateSong, ready } = useLibrary()
   const set = setlists.find((item) => item.id === setlistId)
-  const songs = (set?.songIds || []).map((id) => songsById.get(id)).filter(Boolean)
+  const order = buildRunOrder(set?.songIds || [], songsById)
+  // "songs" is the run order now — every stop in the night, breaks included.
+  const songs = order.items
 
   const [index, setIndex] = useState(() => {
     const saved = readGigPosition()
@@ -148,7 +182,7 @@ export function GigMode({ setlistId }) {
 
   const markAllPlayed = () => {
     const today = todayISO()
-    for (const song of songs) updateSong(song.id, { lastPlayed: today })
+    for (const item of order.songs) updateSong(item.song.id, { lastPlayed: today })
     clearGigPosition()
     navigate(`/sets/${setlistId}`, { replace: true })
   }
@@ -174,7 +208,7 @@ export function GigMode({ setlistId }) {
     return (
       <div className="gig gig--empty">
         <h2 className="gig__done">Set finished</h2>
-        <p className="gig__donesub">{songs.length} songs — nice one.</p>
+        <p className="gig__donesub">{order.songs.length} songs — nice one.</p>
         <button type="button" className="btn btn--primary btn--block" onClick={markAllPlayed}>
           Mark all played today
         </button>
@@ -192,13 +226,24 @@ export function GigMode({ setlistId }) {
     )
   }
 
-  const song = songs[index]
-  const next = songs[index + 1]
-  const previous = songs[index - 1]
+  const current = songs[index]
+  const song = current?.kind === 'song' ? current.song : null
+  const nextItem = songs[index + 1]
+  const previousItem = songs[index - 1]
+  const labelOf = (item) =>
+    !item
+      ? ''
+      : item.kind === 'break'
+        ? `Break · ${item.minutes} min`
+        : item.song.name || 'Untitled song'
+  const next = nextItem ? { name: labelOf(nextItem) } : null
+  const previous = previousItem ? { name: labelOf(previousItem) } : null
   const atEnd = index === songs.length - 1
-  const noteLines = toNoteLines(song.notes).filter((line, i) =>
-    (i === 0 && isCountInLine(line) ? countInBody(line) : line).trim(),
-  )
+  const noteLines = song
+    ? toNoteLines(song.notes).filter((line, i) =>
+        (i === 0 && isCountInLine(line) ? countInBody(line) : line).trim(),
+      )
+    : []
 
   return (
     <div className="gig">
@@ -217,7 +262,11 @@ export function GigMode({ setlistId }) {
           onClick={() => setOverview((open) => !open)}
           aria-label={overview ? 'Back to the current song' : 'Show the whole set'}
         >
-          {index + 1} / {songs.length}
+          {current?.kind === 'break'
+            ? `Break · set ${current.setNumber} next`
+            : order.setCount > 1
+              ? `Set ${current?.setNumber ?? 1} · ${current?.positionInSet ?? 1} / ${order.songsInSet(current?.setNumber ?? 1)}`
+              : `${current?.positionInSet ?? 1} / ${order.songs.length}`}
         </button>
         <div className="gig__zoom">
           {!overview && (
@@ -257,26 +306,45 @@ export function GigMode({ setlistId }) {
       {overview ? (
         <>
         <p className="gig__setinfo">
-          {songs.length} songs · {describeSetLength(songs) || 'no lengths yet'}
-          {index < songs.length - 1 && describeSetLength(songs.slice(index))
-            ? ` · ${describeSetLength(songs.slice(index))} left`
+          {order.setCount > 1 ? `${order.setCount} sets · ` : ''}
+          {order.songs.length} songs
+          {describeSetLength(order.songs.map((item) => item.song))
+            ? ` · ${describeSetLength(order.songs.map((item) => item.song))}`
+            : ''}
+          {breakTotal(set.songIds) > 0 ? ` · ${breakTotal(set.songIds)} min breaks` : ''}
+          {index < songs.length - 1 &&
+          describeSetLength(
+            songs.slice(index).filter((item) => item.kind === 'song').map((item) => item.song),
+          )
+            ? ` · ${describeSetLength(songs.slice(index).filter((item) => item.kind === 'song').map((item) => item.song))} left`
             : ''}
         </p>
         <ul className="gig__list">
           {songs.map((item, i) => (
-            <li key={item.id}>
+            <li key={`${item.entry}-${i}`}>
+              {item.kind === 'song' && item.startsSet && order.setCount > 1 && (
+                <p className="gig__setmark">Set {item.setNumber}</p>
+              )}
               <button
                 type="button"
                 ref={i === index ? currentRow : null}
-                className={`gig__listrow ${i === index ? 'gig__listrow--now' : ''}`}
+                className={`gig__listrow ${i === index ? 'gig__listrow--now' : ''} ${
+                  item.kind === 'break' ? 'gig__listrow--break' : ''
+                }`}
                 aria-current={i === index ? 'true' : undefined}
                 onClick={() => {
                   setIndex(i)
                   setOverview(false)
                 }}
               >
-                <span className="gig__listnum">{i + 1}</span>
-                <span className="gig__listname">{item.name || 'Untitled song'}</span>
+                <span className="gig__listnum">
+                  {item.kind === 'break' ? '—' : item.positionInSet}
+                </span>
+                <span className="gig__listname">
+                  {item.kind === 'break'
+                    ? `Break · ${item.minutes} min`
+                    : item.song.name || 'Untitled song'}
+                </span>
                 {i === index && <span className="gig__now">Now</span>}
               </button>
             </li>
@@ -292,9 +360,18 @@ export function GigMode({ setlistId }) {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
         >
+          {current?.kind === 'break' ? (
+            <BreakScreen
+              minutes={current.minutes}
+              setNumber={current.setNumber}
+              nextSong={songs.slice(index + 1).find((item) => item.kind === 'song')?.song}
+            />
+          ) : (
+          <>
           <h1 className="gig__title" style={{ fontSize: `${28 * scale}px` }}>
             {song.name || 'Untitled song'}
           </h1>
+          {song && (
           <MetronomeButton
             key={song.id}
             bpm={song.bpm}
@@ -313,6 +390,7 @@ export function GigMode({ setlistId }) {
               updateSong(song.id, { bpm: next, tempoConfidence: 'manual' })
             }
           />
+          )}
           {noteLines.length > 0 ? (
             <ul className="gig__notes" style={{ fontSize: `${19 * scale}px` }}>
               {noteLines.map((line, i) => (
@@ -322,6 +400,8 @@ export function GigMode({ setlistId }) {
             </ul>
           ) : (
             <p className="gig__nonotes">No notes for this one.</p>
+          )}
+          </>
           )}
         </div>
       )}
@@ -333,7 +413,7 @@ export function GigMode({ setlistId }) {
             className="gig__step gig__step--main gig__step--wide"
             onClick={() => setOverview(false)}
           >
-            Back to {song.name || 'the current song'}
+            Back to {current?.kind === 'break' ? 'the break' : song?.name || 'the set'}
           </button>
         ) : (
           <>

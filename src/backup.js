@@ -4,7 +4,14 @@
  * by field, so a truncated or hand-edited file can't corrupt the library.
  */
 import { isAppleMusicUrl } from './appleMusic.js'
-import { DIFFICULTIES, TIME_SIGNATURES, toNoteLines, uid, withCountIn } from './model.js'
+import {
+  DIFFICULTIES,
+  TIME_SIGNATURES,
+  isBreakEntry,
+  toNoteLines,
+  uid,
+  withCountIn,
+} from './model.js'
 
 export const BACKUP_APP = 'drumming-puppys-setlist'
 export const BACKUP_VERSION = 1
@@ -98,7 +105,8 @@ export function normaliseBackup(raw) {
   // Drop references that point at records the file doesn't actually contain.
   const songIds = new Set(songs.map((song) => song.id))
   for (const set of setlists) {
-    set.songIds = set.songIds.filter((id) => songIds.has(id))
+    // Break markers are not song ids, and must not be filtered away as strays.
+    set.songIds = set.songIds.filter((id) => isBreakEntry(id) || songIds.has(id))
   }
 
   return { songs, setlists, exportedAt: str(raw.exportedAt, 40) }

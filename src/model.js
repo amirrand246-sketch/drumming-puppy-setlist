@@ -52,6 +52,87 @@ export function formatSetLength(seconds) {
   return rest ? `${hours} hr ${rest} min` : `${hours} hr`
 }
 
+/* ---------- breaks and sets ---------- */
+
+/**
+ * A setlist's running order holds song ids and, between them, break markers
+ * written as "break:20". Keeping them in the same array means drag reorder,
+ * resume, duplicate and export all keep working untouched.
+ */
+export const BREAK_PREFIX = 'break:'
+export const DEFAULT_BREAK_MINUTES = 15
+
+export function isBreakEntry(entry) {
+  return typeof entry === 'string' && entry.startsWith(BREAK_PREFIX)
+}
+
+export function breakMinutes(entry) {
+  const minutes = Number(String(entry).slice(BREAK_PREFIX.length))
+  return Number.isFinite(minutes) && minutes > 0 ? Math.min(240, Math.round(minutes)) : 0
+}
+
+export function makeBreak(minutes = DEFAULT_BREAK_MINUTES) {
+  const clamped = Math.min(240, Math.max(1, Math.round(minutes) || DEFAULT_BREAK_MINUTES))
+  return `${BREAK_PREFIX}${clamped}`
+}
+
+/**
+ * Turn the raw entries into what the screens actually need: every song tagged
+ * with which set it belongs to and its position inside that set, every break
+ * tagged with the set it opens. Songs deleted from the library drop out.
+ */
+export function buildRunOrder(entries, songsById) {
+  const items = []
+  let setNumber = 1
+  let positionInSet = 0
+  let index = -1
+
+  for (const entry of entries || []) {
+    index += 1
+    if (isBreakEntry(entry)) {
+      // A break before any song at all is not a set boundary, just a break.
+      const opensSet = positionInSet > 0
+      items.push({
+        kind: 'break',
+        entry,
+        index,
+        minutes: breakMinutes(entry),
+        setNumber: opensSet ? setNumber + 1 : setNumber,
+      })
+      if (opensSet) {
+        setNumber += 1
+        positionInSet = 0
+      }
+      continue
+    }
+    const song = songsById.get(entry)
+    if (!song) continue
+    positionInSet += 1
+    items.push({
+      kind: 'song',
+      entry,
+      index,
+      song,
+      setNumber,
+      positionInSet,
+      startsSet: positionInSet === 1,
+    })
+  }
+
+  const songs = items.filter((item) => item.kind === 'song')
+  const setCount = songs.length ? Math.max(...songs.map((item) => item.setNumber)) : 0
+  const perSet = new Map()
+  for (const item of songs) perSet.set(item.setNumber, (perSet.get(item.setNumber) || 0) + 1)
+
+  return { items, songs, setCount, songsInSet: (n) => perSet.get(n) || 0 }
+}
+
+export function breakTotal(entries) {
+  return (entries || [])
+    .filter(isBreakEntry)
+    .reduce((sum, entry) => sum + breakMinutes(entry), 0)
+}
+
 export function setLength(songs) {
   const timed = songs.filter((song) => songSeconds(song) > 0)
   const seconds = timed.reduce((sum, song) => sum + songSeconds(song), 0)

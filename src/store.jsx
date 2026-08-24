@@ -10,6 +10,7 @@ import {
 import * as storage from './storage.js'
 import {
   compareSongs,
+  isBreakEntry,
   isCountInLine,
   newSetlist,
   newSong,
@@ -312,7 +313,11 @@ export function LibraryProvider({ children }) {
       const setNames = new Set(setlists.map((set) => set.name.trim().toLowerCase()))
       const newSetlists = backup.setlists
         .filter((set) => !setIds.has(set.id) && !setNames.has(set.name.trim().toLowerCase()))
-        .map((set) => ({ ...set, songIds: set.songIds.filter((id) => keptSongIds.has(id)) }))
+        .map((set) => ({
+          ...set,
+          // Break markers are part of the running order, not song references.
+          songIds: set.songIds.filter((id) => isBreakEntry(id) || keptSongIds.has(id)),
+        }))
 
       for (const song of newSongs) await storage.put('songs', song)
       for (const set of newSetlists) await storage.put('setlists', set)

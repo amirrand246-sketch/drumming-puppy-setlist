@@ -31,7 +31,8 @@ and works offline after the first load.
   type.
 - **Setlists** — build an ad hoc list, drag songs into running order with a
   handle (or arrow keys), then save it with a name. Rename, duplicate, delete.
-- **Live gig mode** — resumes where you left off: the current song is written
+- **Live gig mode** — walking into a break gives a countdown, the time you are
+  due back, and what opens the next set. Resumes where you left off: the current song is written
   down as you move, so an app killed mid-set comes back to song 9, not song 1,
   and the Setlists screen offers to resume for the next twelve hours.
 - **Live gig mode** — open a setlist and hit *Start gig mode*: full-screen, dark,
