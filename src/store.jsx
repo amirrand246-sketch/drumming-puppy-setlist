@@ -255,6 +255,8 @@ export function LibraryProvider({ children }) {
           'artist',
           'bpm',
           'tempoConfidence',
+          'timeSignature',
+          'durationSeconds',
           'notes',
           'tags',
           'difficulty',
