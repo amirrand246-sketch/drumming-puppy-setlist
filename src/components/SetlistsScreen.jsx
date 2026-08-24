@@ -1,10 +1,15 @@
 import { useLibrary } from '../store.jsx'
 import { navigate } from '../router.js'
-import { relativeDate } from '../model.js'
+import { describeSetLength, relativeDate } from '../model.js'
+import { readGigPosition } from '../gigSession.js'
 import { EmptyState, Icon, TopBar } from './ui.jsx'
 
 export function SetlistsScreen() {
-  const { setlists, createSetlist, ready } = useLibrary()
+  const { setlists, songsById, createSetlist, ready } = useLibrary()
+  const saved = readGigPosition()
+  const resume = saved ? setlists.find((set) => set.id === saved.setlistId) : null
+  const resumeAt = resume ? Math.min(saved.index, Math.max(0, resume.songIds.length - 1)) : 0
+  const songsOf = (set) => set.songIds.map((id) => songsById.get(id)).filter(Boolean)
 
   const startNew = () => {
     const set = createSetlist('Untitled Set')
@@ -22,6 +27,20 @@ export function SetlistsScreen() {
           </button>
         }
       />
+
+      {resume && resume.songIds.length > 0 && (
+        <div className="resume">
+          <button
+            type="button"
+            className="btn btn--primary btn--block"
+            onClick={() => navigate(`/gig/${resume.id}`)}
+            data-testid="resume-gig"
+          >
+            <Icon name="play" size={18} /> Resume {resume.name} · song {resumeAt + 1} of{' '}
+            {resume.songIds.length}
+          </button>
+        </div>
+      )}
 
       {!ready ? null : setlists.length === 0 ? (
         <EmptyState
@@ -48,8 +67,11 @@ export function SetlistsScreen() {
                     <span className="row__title">{set.name}</span>
                     <span className="row__sub">
                       <span className="row__tags">
-                        {set.songIds.length} {set.songIds.length === 1 ? 'song' : 'songs'} ·
-                        updated {relativeDate(set.updatedAt)}
+                        {set.songIds.length} {set.songIds.length === 1 ? 'song' : 'songs'}
+                        {describeSetLength(songsOf(set))
+                          ? ` · ${describeSetLength(songsOf(set))}`
+                          : ''}{' '}
+                        · updated {relativeDate(set.updatedAt)}
                       </span>
                     </span>
                   </span>

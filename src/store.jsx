@@ -42,6 +42,7 @@ export function LibraryProvider({ children }) {
             typeof song.artist === 'string' &&
             typeof song.appleMusicUrl === 'string' &&
             typeof song.tempoConfidence === 'string' &&
+            typeof song.timeSignature === 'string' &&
             song.imageIds === undefined &&
             isCountInLine(song.notes[0])
           ) {
@@ -51,6 +52,8 @@ export function LibraryProvider({ children }) {
           const next = {
             ...rest,
             artist: typeof song.artist === 'string' ? song.artist : '',
+            timeSignature: typeof song.timeSignature === 'string' ? song.timeSignature : '4/4',
+            durationSeconds: Number.isFinite(song.durationSeconds) ? song.durationSeconds : null,
             appleMusicUrl:
               typeof song.appleMusicUrl === 'string' ? song.appleMusicUrl : '',
             appleMusicSource:

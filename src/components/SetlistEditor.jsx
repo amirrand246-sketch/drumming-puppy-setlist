@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { copyName, relativeDate } from '../model.js'
+import { copyName, describeSetLength, relativeDate, setLength } from '../model.js'
 import { ConfirmDialog, EmptyState, Icon, PromptDialog, TopBar } from './ui.jsx'
 import { ReorderList } from './ReorderList.jsx'
 import { SongPicker } from './SongPicker.jsx'
@@ -100,9 +100,16 @@ export function SetlistEditor({ setlistId }) {
             <Icon name="pencil" size={16} />
           </button>
           <p className="setmeta__sub">
-            {songs.length} {songs.length === 1 ? 'song' : 'songs'} · updated{' '}
+            {songs.length} {songs.length === 1 ? 'song' : 'songs'}
+            {describeSetLength(songs) ? ` · ${describeSetLength(songs)}` : ''} · updated{' '}
             {relativeDate(set.updatedAt)}
           </p>
+          {songs.length > 0 && setLength(songs).timed < songs.length && (
+            <p className="setmeta__hint">
+              {setLength(songs).timed} of {songs.length} songs have a length — add one on a
+              song to sharpen the total.
+            </p>
+          )}
         </div>
 
         {songs.length > 0 && (

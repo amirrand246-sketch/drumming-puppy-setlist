@@ -15,13 +15,22 @@ export function createMetronome({ onBeat } = {}) {
   let nextBeatTime = 0
   let beat = 0
   let interval = 0.5
+  let meter = { beatsPerBar: 4, compound: false }
+
+  // 2 = downbeat, 1 = the head of a group in a compound meter, 0 = the rest.
+  const TONES = [
+    { frequency: 1000, level: 0.32 },
+    { frequency: 1300, level: 0.4 },
+    { frequency: 1600, level: 0.52 },
+  ]
 
   const click = (time, accent) => {
+    const tone = TONES[accent] || TONES[0]
     const oscillator = context.createOscillator()
     const gain = context.createGain()
-    oscillator.frequency.value = accent ? 1600 : 1000
+    oscillator.frequency.value = tone.frequency
     gain.gain.setValueAtTime(0.0001, time)
-    gain.gain.exponentialRampToValueAtTime(accent ? 0.5 : 0.32, time + 0.001)
+    gain.gain.exponentialRampToValueAtTime(tone.level, time + 0.001)
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.055)
     oscillator.connect(gain).connect(context.destination)
     oscillator.start(time)
@@ -30,12 +39,12 @@ export function createMetronome({ onBeat } = {}) {
 
   const schedule = () => {
     while (nextBeatTime < context.currentTime + SCHEDULE_AHEAD) {
-      const accent = beat % 4 === 0
+      const inBar = beat % meter.beatsPerBar
+      const accent = inBar === 0 ? 2 : meter.compound && inBar % 3 === 0 ? 1 : 0
       click(nextBeatTime, accent)
       if (onBeat) {
         const delay = Math.max(0, (nextBeatTime - context.currentTime) * 1000)
-        const index = beat
-        setTimeout(() => onBeat(index), delay)
+        setTimeout(() => onBeat(inBar, accent), delay)
       }
       nextBeatTime += interval
       beat += 1
@@ -43,9 +52,10 @@ export function createMetronome({ onBeat } = {}) {
   }
 
   return {
-    async start(bpm) {
+    async start(bpm, { beatsPerBar = 4, compound = false } = {}) {
       const tempo = Number(bpm)
       if (!Number.isFinite(tempo) || tempo <= 0) return false
+      meter = { beatsPerBar: Math.max(1, Math.round(beatsPerBar)), compound }
       if (!context) {
         const Ctx = window.AudioContext || window.webkitAudioContext
         if (!Ctx) return false

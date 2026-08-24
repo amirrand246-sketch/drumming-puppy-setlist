@@ -4,7 +4,7 @@
  * by field, so a truncated or hand-edited file can't corrupt the library.
  */
 import { isAppleMusicUrl } from './appleMusic.js'
-import { DIFFICULTIES, toNoteLines, uid, withCountIn } from './model.js'
+import { DIFFICULTIES, TIME_SIGNATURES, toNoteLines, uid, withCountIn } from './model.js'
 
 export const BACKUP_APP = 'drumming-puppys-setlist'
 export const BACKUP_VERSION = 1
@@ -27,6 +27,11 @@ function cleanSong(raw) {
     id: str(raw.id, 80) || uid('song'),
     name,
     artist: str(raw.artist, 200).trim(),
+    timeSignature: TIME_SIGNATURES.includes(raw.timeSignature) ? raw.timeSignature : '4/4',
+    durationSeconds:
+      Number.isFinite(Number(raw.durationSeconds)) && Number(raw.durationSeconds) > 0
+        ? Math.round(Number(raw.durationSeconds))
+        : null,
     // A link only survives the round trip if it still looks like Apple Music.
     appleMusicUrl: isAppleMusicUrl(str(raw.appleMusicUrl, 2000)) ? str(raw.appleMusicUrl, 2000).trim() : '',
     appleMusicSource: ['auto', 'manual'].includes(raw.appleMusicSource) ? raw.appleMusicSource : '',

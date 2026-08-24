@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLibrary } from '../store.jsx'
 import { back, navigate } from '../router.js'
-import { countInBody, isCountInLine, toNoteLines, todayISO } from '../model.js'
+import {
+  beatsPerBar,
+  countInBody,
+  describeSetLength,
+  isCompound,
+  isCountInLine,
+  toNoteLines,
+  todayISO,
+} from '../model.js'
+import { clearGigPosition, readGigPosition, saveGigPosition } from '../gigSession.js'
 import { Icon } from './ui.jsx'
 import { MetronomeButton } from './Tempo.jsx'
 
@@ -52,7 +61,10 @@ export function GigMode({ setlistId }) {
   const set = setlists.find((item) => item.id === setlistId)
   const songs = (set?.songIds || []).map((id) => songsById.get(id)).filter(Boolean)
 
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(() => {
+    const saved = readGigPosition()
+    return saved && saved.setlistId === setlistId ? saved.index : 0
+  })
   const [finished, setFinished] = useState(false)
   const [overview, setOverview] = useState(false)
   const [scale, setScale] = useState(readScale)
@@ -66,6 +78,11 @@ export function GigMode({ setlistId }) {
     document.body.classList.add('gig-open')
     return () => document.body.classList.remove('gig-open')
   }, [])
+
+  // Written on every move, so an app that dies mid-set comes back where it was.
+  useEffect(() => {
+    if (songs.length > 0 && index < songs.length) saveGigPosition(setlistId, index)
+  }, [setlistId, index, songs.length])
 
   const go = useCallback(
     (delta) => {
@@ -132,6 +149,7 @@ export function GigMode({ setlistId }) {
   const markAllPlayed = () => {
     const today = todayISO()
     for (const song of songs) updateSong(song.id, { lastPlayed: today })
+    clearGigPosition()
     navigate(`/sets/${setlistId}`, { replace: true })
   }
 
@@ -237,6 +255,13 @@ export function GigMode({ setlistId }) {
       </header>
 
       {overview ? (
+        <>
+        <p className="gig__setinfo">
+          {songs.length} songs · {describeSetLength(songs) || 'no lengths yet'}
+          {index < songs.length - 1 && describeSetLength(songs.slice(index))
+            ? ` · ${describeSetLength(songs.slice(index))} left`
+            : ''}
+        </p>
         <ul className="gig__list">
           {songs.map((item, i) => (
             <li key={item.id}>
@@ -257,6 +282,7 @@ export function GigMode({ setlistId }) {
             </li>
           ))}
         </ul>
+        </>
       ) : (
         <div
           className="gig__stage"
@@ -274,6 +300,10 @@ export function GigMode({ setlistId }) {
             bpm={song.bpm}
             adjustable
             className="metro--gig"
+            meter={{
+              beatsPerBar: beatsPerBar(song.timeSignature),
+              compound: isCompound(song.timeSignature),
+            }}
             label={
               song.bpm && song.tempoConfidence === 'unconfirmed'
                 ? `${song.bpm} BPM · unconfirmed`

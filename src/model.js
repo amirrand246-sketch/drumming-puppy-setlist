@@ -1,5 +1,70 @@
 export const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 
+export const TIME_SIGNATURES = ['4/4', '3/4', '2/4', '6/8', '12/8', '5/4', '7/8']
+
+export function beatsPerBar(signature) {
+  const beats = Number(String(signature || '4/4').split('/')[0])
+  return Number.isFinite(beats) && beats > 0 ? beats : 4
+}
+
+/** 6/8 and 12/8 are felt in groups of three, so those group heads get a lift. */
+export function isCompound(signature) {
+  const [beats, unit] = String(signature || '4/4').split('/').map(Number)
+  return unit === 8 && beats % 3 === 0 && beats > 3
+}
+
+/** A song's length: what you typed, else what the linked track says. */
+export function songSeconds(song) {
+  if (Number.isFinite(song?.durationSeconds) && song.durationSeconds > 0) {
+    return song.durationSeconds
+  }
+  const millis = Number(song?.appleMusicTrack?.trackTimeMillis)
+  return Number.isFinite(millis) && millis > 0 ? Math.round(millis / 1000) : 0
+}
+
+export function formatDuration(seconds) {
+  if (!seconds) return ''
+  const minutes = Math.floor(seconds / 60)
+  return `${minutes}:${String(Math.round(seconds % 60)).padStart(2, '0')}`
+}
+
+/** "3:45", "3.45" or plain seconds all mean the same thing here. */
+export function parseDuration(text) {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) return null
+  const parts = trimmed.split(/[:.]/).map((part) => Number(part))
+  if (parts.some((part) => !Number.isFinite(part) || part < 0)) return null
+  const seconds = parts.length === 1 ? parts[0] : parts[0] * 60 + parts[1]
+  if (!Number.isFinite(seconds) || seconds <= 0) return null
+  return Math.min(3600, Math.round(seconds))
+}
+
+/**
+ * Set length, said the way you would say it out loud. `timed` and `total` let
+ * the caller be honest when only some of the songs have a length.
+ */
+export function formatSetLength(seconds) {
+  if (!seconds) return ''
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest ? `${hours} hr ${rest} min` : `${hours} hr`
+}
+
+export function setLength(songs) {
+  const timed = songs.filter((song) => songSeconds(song) > 0)
+  const seconds = timed.reduce((sum, song) => sum + songSeconds(song), 0)
+  return { seconds, timed: timed.length, total: songs.length }
+}
+
+/** "~47 min" when everything is timed, "~47 min+" when it is a floor. */
+export function describeSetLength(songs) {
+  const { seconds, timed, total } = setLength(songs)
+  if (!seconds) return ''
+  return `~${formatSetLength(seconds)}${timed < total ? '+' : ''}`
+}
+
 export function uid(prefix) {
   const random =
     typeof crypto !== 'undefined' && crypto.randomUUID
@@ -13,6 +78,8 @@ export function newSong(name = '') {
     id: uid('song'),
     name,
     artist: '',
+    timeSignature: '4/4',
+    durationSeconds: null,
     appleMusicUrl: '',
     appleMusicSource: '',
     appleMusicTrack: null,

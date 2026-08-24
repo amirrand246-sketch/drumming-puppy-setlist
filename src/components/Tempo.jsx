@@ -9,6 +9,14 @@ import {
   hasTempoKey,
 } from '../tempo.js'
 import { Icon } from './ui.jsx'
+import {
+  TIME_SIGNATURES,
+  beatsPerBar,
+  formatDuration,
+  isCompound,
+  parseDuration,
+  songSeconds,
+} from '../model.js'
 
 /**
  * Shared metronome control: play/pause with a beat light, and optional −/+ so a
@@ -20,9 +28,16 @@ import { Icon } from './ui.jsx'
  */
 export const DEFAULT_BPM = 100
 
-export function MetronomeButton({ bpm, label, className = '', onTempoChange, adjustable = false }) {
+export function MetronomeButton({
+  bpm,
+  label,
+  className = '',
+  onTempoChange,
+  adjustable = false,
+  meter,
+}) {
   const [running, setRunning] = useState(false)
-  const [pulse, setPulse] = useState(false)
+  const [pulse, setPulse] = useState(0)
   const [working, setWorking] = useState(() => bpm || DEFAULT_BPM)
   // Mirrors `working` synchronously: saving a tempo bounces straight back as a
   // prop, and without this the effect below would stop the click we just began.
@@ -33,10 +48,10 @@ export function MetronomeButton({ bpm, label, className = '', onTempoChange, adj
 
   useEffect(() => {
     engine.current = createMetronome({
-      onBeat: () => {
-        setPulse(true)
+      onBeat: (inBar, accent) => {
+        setPulse(accent === 2 ? 2 : 1)
         clearTimeout(flash.current)
-        flash.current = setTimeout(() => setPulse(false), 90)
+        flash.current = setTimeout(() => setPulse(0), 90)
       },
     })
     return () => {
@@ -63,7 +78,7 @@ export function MetronomeButton({ bpm, label, className = '', onTempoChange, adj
       setRunning(false)
       return
     }
-    const started = await engine.current.start(workingRef.current)
+    const started = await engine.current.start(workingRef.current, meter)
     setRunning(Boolean(started))
     // Starting from the default is a decision about this song; keep it.
     if (started && !bpm && onTempoChange) onTempoChange(workingRef.current)
@@ -77,7 +92,7 @@ export function MetronomeButton({ bpm, label, className = '', onTempoChange, adj
       if (onTempoChange) onTempoChange(next)
       if (running) {
         engine.current.stop()
-        engine.current.start(next)
+        engine.current.start(next, meter)
       }
       return next
     })
@@ -123,7 +138,12 @@ export function MetronomeButton({ bpm, label, className = '', onTempoChange, adj
       >
         <Icon name={running ? 'pause' : 'play'} size={16} />
         <span>{label ?? `${working} BPM`}</span>
-        <span className={`metro__beat ${pulse ? 'metro__beat--hit' : ''}`} aria-hidden="true" />
+        <span
+          className={`metro__beat ${pulse ? 'metro__beat--hit' : ''} ${
+            pulse === 2 ? 'metro__beat--down' : ''
+          }`}
+          aria-hidden="true"
+        />
       </button>
       {adjustable && (
         <button {...nudge(1, 'Faster')}>
@@ -153,6 +173,7 @@ export function TempoRow({ song, patch }) {
   // Held while the field has focus: clamping every keystroke turns "96" into
   // "206", because the first digit is below the minimum and gets rewritten.
   const [draft, setDraft] = useState(null)
+  const [lengthDraft, setLengthDraft] = useState(null)
   const [online, setOnline] = useState(() => navigator.onLine !== false)
   const running = useRef(false)
 
@@ -223,6 +244,14 @@ export function TempoRow({ song, patch }) {
 
   const manual = song.tempoConfidence === TEMPO_MANUAL
 
+  const commitLength = () => {
+    if (lengthDraft === null) return
+    const seconds = parseDuration(lengthDraft)
+    setLengthDraft(null)
+    if (seconds === songSeconds(song)) return
+    patch({ durationSeconds: seconds })
+  }
+
   /** Only when the field is left: a half-typed tempo is not a tempo yet. */
   const commitDraft = () => {
     if (draft === null) return
@@ -271,6 +300,7 @@ export function TempoRow({ song, patch }) {
           bpm={song.bpm}
           adjustable
           label="Metronome"
+          meter={{ beatsPerBar: beatsPerBar(song.timeSignature), compound: isCompound(song.timeSignature) }}
           onTempoChange={(next) =>
             patch({
               bpm: next,
@@ -285,6 +315,44 @@ export function TempoRow({ song, patch }) {
             unchecked version
           </span>
         )}
+      </div>
+
+      <div className="tempo__row">
+        <label className="tempo__meter">
+          <span className="tempo__unit">TIME</span>
+          <select
+            className="tempo__select"
+            value={song.timeSignature || '4/4'}
+            aria-label="Time signature"
+            data-testid="time-signature"
+            onChange={(event) => patch({ timeSignature: event.target.value })}
+          >
+            {TIME_SIGNATURES.map((signature) => (
+              <option key={signature} value={signature}>
+                {signature}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="tempo__meter">
+          <span className="tempo__unit">LENGTH</span>
+          <input
+            className="tempo__length"
+            type="text"
+            inputMode="numeric"
+            placeholder="3:45"
+            aria-label="Song length"
+            data-testid="duration-input"
+            value={lengthDraft ?? formatDuration(songSeconds(song))}
+            onFocus={() => setLengthDraft(formatDuration(songSeconds(song)))}
+            onChange={(event) => setLengthDraft(event.target.value.replace(/[^0-9:.]/g, ''))}
+            onBlur={commitLength}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur()
+            }}
+          />
+        </label>
       </div>
 
       {hint && <span className="tempo__note">{hint}</span>}
